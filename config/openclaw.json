@@ -6,10 +6,12 @@
     "defaults": {
       "workspace": "~/.openclaw/workspace",
       "model": {
-        "primary": "anthropic/claude-opus-4-6",
-        "fallbacks": [
-          "anthropic/claude-sonnet-4-6"
-        ]
+        "primary": "local/qwen/qwen3.5-9b"
+      },
+      "models": {
+        "local/qwen/qwen3.5-9b": {
+          "alias": "default"
+        }
       }
     }
   },
@@ -1238,6 +1240,27 @@
         "ANALYSIS_QUERY_TIMEOUT": "${ANALYSIS_QUERY_TIMEOUT:-30}",
         "ANALYSIS_MAX_RESULT_ROWS": "${ANALYSIS_MAX_RESULT_ROWS:-500}",
         "ANALYSIS_EXTRA_ROOTS": "${ANALYSIS_EXTRA_ROOTS:-}"
+      }
+    }
+  },
+  "models": {
+    "providers": {
+      "local": {
+        "baseUrl": "http://127.0.0.1:8000/v1",
+        "apiKey": "vllm-local",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "qwen/qwen3.5-9b",
+            "name": "qwen/qwen3.5-9b",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "contextWindow": 131072,
+            "maxTokens": 16384
+          }
+        ]
       }
     }
   }

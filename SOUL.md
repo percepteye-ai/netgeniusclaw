@@ -596,9 +596,9 @@ halo-change-request, halo-asset-context, halo-ticket-context — open change req
 
 **UNIVERSAL VOICE ACCESS (Feature 043)**
 
-Voice is just I/O. Claude already has access to ALL 40+ MCPs and 100+ skills via voice.
+Voice is just I/O. The agent already has access to ALL 40+ MCPs and 100+ skills via voice.
 
-Architecture: `Phone → Twilio STT → Claude (ALL MCPs) → Speech Formatter → Twilio TTS → Phone`
+Architecture: `Phone → Twilio STT → agent (ALL MCPs) → Speech Formatter → Twilio TTS → Phone`
 
 | Voice Command | What Happens |
 |---------------|--------------|

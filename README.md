@@ -4,7 +4,7 @@
 
 # NetGeniusClaw
 
-A CCIE-level AI network engineering coworker. Built on [OpenClaw](https://github.com/openclaw/openclaw) with Anthropic Claude, 223 skills, and 167 MCP integrations for complete network automation with ITSM gating, source-of-truth reconciliation, immutable audit trails, gNMI streaming telemetry, NetFlow/IPFIX flow telemetry, Canvas/A2UI inline network visualizations, packet capture analysis, GitHub config-as-code, GitLab DevOps (issues, merge requests, pipelines, repositories, wikis), Jenkins CI/CD (job monitoring, build triggering, log analysis, SCM tracking), Chrome DevTools browser automation (visualization render QA, controller GUI gap-filling, undocumented API discovery, headless or watchable-headed), Computer Use full-desktop automation (legacy desktop-only tools with no browser or API path, virtual XFCE desktop with VNC/noVNC Watch Mode), Cisco CML lab simulation, ContainerLab containerized network labs, Cisco NSO orchestration, Cisco SD-WAN vManage monitoring, Grafana observability (dashboards, Prometheus, Loki, alerting, incidents), Prometheus direct PromQL monitoring, Kubeshark Kubernetes traffic analysis, Cisco Meraki Dashboard management, Cisco ThousandEyes network intelligence, AWS and Azure cloud networking, Cisco Secure Firewall policy auditing, Check Point Security (15 MCPs: policy, threat intel, gateway, SASE, malware), Itential network orchestration, Juniper JunOS device automation, Arista CloudVision Portal monitoring, F5 BIG-IP pyATS iControl REST coverage, Infoblox DDI, Palo Alto Panorama, FortiManager, Batfish offline configuration analysis, UML diagram generation, EVPN/VXLAN fabric workflows, live BGP/OSPF control-plane participation, nmap network scanning, gtrace path analysis and IP enrichment, Slack-native operations, Cisco WebEx-native operations, Microsoft 365 integration, Twilio voice/SMS, Twitter/X integration, Claroty OT/IoT asset management, Forward Networks digital twin, Ollama local LLM routing, an offline agentic RAG document knowledge base (cited answers from user-uploaded vendor guides and standards), layered Memory MCP, MemPalace persistent AI memory, and Lantronix Percepxion/SLC out-of-band console-server management (fleet-wide and direct single-device).
+A CCIE-level AI network engineering coworker. Built on [OpenClaw](https://github.com/openclaw/openclaw), running on **open-weights models you host yourself**, with 223 skills, and 167 MCP integrations for complete network automation with ITSM gating, source-of-truth reconciliation, immutable audit trails, gNMI streaming telemetry, NetFlow/IPFIX flow telemetry, Canvas/A2UI inline network visualizations, packet capture analysis, GitHub config-as-code, GitLab DevOps (issues, merge requests, pipelines, repositories, wikis), Jenkins CI/CD (job monitoring, build triggering, log analysis, SCM tracking), Chrome DevTools browser automation (visualization render QA, controller GUI gap-filling, undocumented API discovery, headless or watchable-headed), Computer Use full-desktop automation (legacy desktop-only tools with no browser or API path, virtual XFCE desktop with VNC/noVNC Watch Mode), Cisco CML lab simulation, ContainerLab containerized network labs, Cisco NSO orchestration, Cisco SD-WAN vManage monitoring, Grafana observability (dashboards, Prometheus, Loki, alerting, incidents), Prometheus direct PromQL monitoring, Kubeshark Kubernetes traffic analysis, Cisco Meraki Dashboard management, Cisco ThousandEyes network intelligence, AWS and Azure cloud networking, Cisco Secure Firewall policy auditing, Check Point Security (15 MCPs: policy, threat intel, gateway, SASE, malware), Itential network orchestration, Juniper JunOS device automation, Arista CloudVision Portal monitoring, F5 BIG-IP pyATS iControl REST coverage, Infoblox DDI, Palo Alto Panorama, FortiManager, Batfish offline configuration analysis, UML diagram generation, EVPN/VXLAN fabric workflows, live BGP/OSPF control-plane participation, nmap network scanning, gtrace path analysis and IP enrichment, Slack-native operations, Cisco WebEx-native operations, Microsoft 365 integration, Twilio voice/SMS, Twitter/X integration, Claroty OT/IoT asset management, Forward Networks digital twin, Ollama local LLM routing, an offline agentic RAG document knowledge base (cited answers from user-uploaded vendor guides and standards), layered Memory MCP, MemPalace persistent AI memory, and Lantronix Percepxion/SLC out-of-band console-server management (fleet-wide and direct single-device).
 
 ## Resources
 
@@ -47,6 +47,60 @@ Scripted / non-interactive installs:
 ./scripts/install.sh --all                        # everything
 ./scripts/install.sh --list                       # see all components & profiles
 ```
+
+### Model runtime — open weights by default
+
+NetGeniusClaw ships pointed at a **local, OpenAI-compatible model server**. The
+default in `config/openclaw.json` is:
+
+```json
+"models": { "providers": { "local": {
+  "baseUrl": "http://127.0.0.1:8000/v1",
+  "apiKey": "vllm-local",
+  "api": "openai-completions",
+  "models": [{ "id": "qwen/qwen3.5-9b", "contextWindow": 131072, "maxTokens": 16384 }]
+}}},
+"agents": { "defaults": { "model": { "primary": "local/qwen/qwen3.5-9b" } } }
+```
+
+**Two fields to change**, and they must agree with what your server actually
+serves: `models.providers.local.models[0].id` and
+`agents.defaults.model.primary`. The model id above is a placeholder taken from
+OpenClaw's own documentation — it is not a recommendation, and nothing verifies
+it against your server for you.
+
+| Server | `baseUrl` | Notes |
+|---|---|---|
+| **vLLM** | `http://127.0.0.1:8000/v1` | the default here; Linux + GPU |
+| **LM Studio** | `http://localhost:1234/v1` | easiest on an Apple Silicon Mac (MLX/GGUF) |
+| **SGLang** | `http://127.0.0.1:30000/v1` | same `api` value |
+
+Three things worth knowing before you change it:
+
+- **Do not use Ollama's `/v1`.** OpenClaw drives Ollama over its **native**
+  `/api/chat` (`api: "ollama"`, `baseUrl` with no `/v1`), and OpenClaw's own
+  documentation warns that pointing at the OpenAI-compatible `/v1` URL *"breaks
+  tool calling and models can emit raw tool-call JSON as plain text"*. For a
+  104-tool agent that is fatal.
+- **A model ref must also appear in `agents.defaults.models`**, or the agent
+  rejects it and refuses every turn. The shipped config already does this; keep
+  it in step when you change the model.
+- **`${VAR}` interpolation has no default syntax here.** OpenClaw substitutes
+  with `replace(/\$\{([^}]+)\}/g, ...)`, so the whole contents become the
+  variable name and `${VAR:-fallback}` resolves nothing. Use literal values, as
+  the shipped config does.
+
+**Prefer a hosted model?** Nothing stops you — register the provider you want
+and point `primary` at it. `openclaw onboard` walks through Anthropic, OpenAI,
+Bedrock, Vertex and 30+ others. The default is open weights because this fork is
+built to run on infrastructure you control, not because anything here depends on
+it.
+
+**One honest caveat.** The token tracker calls Anthropic's `count_tokens()` API
+for exact counts (`src/netclaw_tokens/counter.py`, and `anthropic` is a hard
+dependency of that library). On an open-weights model there is no such call to
+make, so it falls back to local estimation against a Claude-shaped tokenizer.
+Costs and counts are then approximate.
 
 ### Agent runtime — OpenClaw or Hermes
 
@@ -164,7 +218,9 @@ and [specs/057-in2n-production-enforcement](specs/057-in2n-production-enforcemen
 Whatever you pick, the installer then runs a two-phase setup:
 
 **Phase 1: `openclaw onboard`** (OpenClaw's built-in wizard)
-- Pick your AI provider (Anthropic, OpenAI, Bedrock, Vertex, 30+ options)
+- Pick your model provider. NetGeniusClaw ships pointed at a **local OpenAI-compatible
+  server** (vLLM / LM Studio / SGLang); OpenClaw also offers Anthropic, OpenAI, Bedrock,
+  Vertex and 30+ others if you would rather use a hosted one
 - Set up the gateway (local mode, auth, port)
 - Connect channels (Slack, Discord, Telegram, WhatsApp, etc.)
 - Install the daemon service
@@ -255,7 +311,8 @@ Requires the OpenClaw gateway to be running for live chat (`openclaw gateway run
 
 ## What It Does
 
-NetGeniusClaw is an autonomous network engineering agent powered by Claude that can:
+NetGeniusClaw is an autonomous network engineering agent, running on an open-weights
+model you host, that can:
 
 - **Monitor** device health — CPU, memory, interfaces, hardware, NTP, logs — fleet-wide in parallel
 - **Troubleshoot** connectivity, routing adjacencies, performance, and flapping using OSI-layer methodology with multi-hop parallel state collection
@@ -311,7 +368,7 @@ NetGeniusClaw is an autonomous network engineering agent powered by Claude that 
 - **Diagram** AWS architecture — auto-discover and render VPCs, subnets, TGWs, load balancers as visual topology diagrams (requires graphviz)
 - **Stream** gNMI telemetry from Cisco IOS-XR, Juniper, Arista, and Nokia SR OS devices — structured YANG model queries, SAMPLE/ON_CHANGE subscriptions, ITSM-gated configuration changes, YANG capability browsing, and gNMI-vs-CLI state comparison
 - **Audit** every action in an immutable Git-based trail (GAIT) — there is always an answer to "what did the AI do and why"
-- **Track** token consumption and cost in real-time — every interaction displays input/output tokens, USD cost, and GCF savings. Session-level tracking with per-tool breakdown. Powered by Anthropic's `count_tokens()` API with local estimation fallback
+- **Track** token consumption and cost in real-time — every interaction displays input/output tokens, USD cost, and GCF savings. Session-level tracking with per-tool breakdown. Powered by Anthropic's `count_tokens()` API with local estimation fallback — note that on an open-weights model there is no Anthropic call to make, so this falls back to local estimation against a Claude-shaped tokenizer and the counts are approximate
 - **Optimize** token usage with GCF encoding — all MCP server responses use [GCF](https://gcformat.com) (Graph Compact Format) for 55-83% token savings on network data. Auto-detects graph-shaped data (devices + links/sessions) and uses graph profile with local IDs and edge arrows. Session deduplication tracks previously-sent symbols across calls (91% savings by call 3). Delta encoding sends only changes on re-queries (99% savings). Configurable via `NETCLAW_GCF_MODE`: `full` (default), `graph`, `generic`, or `off`. JSON fallback on any error
 - **Remember** across sessions with [MemPalace](https://github.com/milla-jovovich/mempalace) — semantic search across all past sessions, temporal knowledge graph for network facts (upgrades, peer changes, maintenance windows) with validity windows, cross-domain navigation between wings, and per-agent diaries. Complements OpenClaw's file-based daily logs (`memory/YYYY-MM-DD.md`) with structured, searchable long-term memory — *"GAIT records what happened. MemPalace remembers why."*
 - **Secure** production deployments with [DefenseClaw](https://github.com/cisco-ai-defense/defenseclaw) — Cisco AI Defense enterprise security: OpenShell kernel-level sandbox (Landlock, seccomp, namespaces), component scanning before execution, CodeGuard static analysis, LLM prompt/completion inspection, runtime guardrails, SQLite audit logging with SIEM export (Splunk HEC, OTLP) for SOC2/PCI-DSS/HIPAA compliance
@@ -2572,7 +2629,8 @@ The `%ENV{NETCLAW_PASSWORD}` syntax pulls credentials from environment variables
 - Python 3.x with pip3
 - git
 - Network devices accessible via SSH (for pyATS)
-- Anthropic API key
+- A model endpoint — an OpenAI-compatible server you run (vLLM, LM Studio, SGLang),
+  or a hosted provider's API key if you prefer one
 
 Optional (for full feature set):
 - NetBox instance with API token (or Nautobot instance with API token — alternative source of truth)
