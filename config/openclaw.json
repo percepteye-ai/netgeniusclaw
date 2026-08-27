@@ -6,10 +6,10 @@
     "defaults": {
       "workspace": "~/.openclaw/workspace",
       "model": {
-        "primary": "local/qwen/qwen3.5-9b"
+        "primary": "local/qwen/qwen3.5-4b"
       },
       "models": {
-        "local/qwen/qwen3.5-9b": {
+        "local/qwen/qwen3.5-4b": {
           "alias": "default"
         }
       }
@@ -1251,8 +1251,8 @@
         "api": "openai-completions",
         "models": [
           {
-            "id": "qwen/qwen3.5-9b",
-            "name": "qwen/qwen3.5-9b",
+            "id": "qwen/qwen3.5-4b",
+            "name": "qwen/qwen3.5-4b",
             "reasoning": false,
             "input": [
               "text"

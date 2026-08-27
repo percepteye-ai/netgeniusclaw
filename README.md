@@ -58,9 +58,9 @@ default in `config/openclaw.json` is:
   "baseUrl": "http://127.0.0.1:8000/v1",
   "apiKey": "vllm-local",
   "api": "openai-completions",
-  "models": [{ "id": "qwen/qwen3.5-9b", "contextWindow": 131072, "maxTokens": 16384 }]
+  "models": [{ "id": "qwen/qwen3.5-4b", "contextWindow": 131072, "maxTokens": 16384 }]
 }}},
-"agents": { "defaults": { "model": { "primary": "local/qwen/qwen3.5-9b" } } }
+"agents": { "defaults": { "model": { "primary": "local/qwen/qwen3.5-4b" } } }
 ```
 
 **Two fields to change**, and they must agree with what your server actually

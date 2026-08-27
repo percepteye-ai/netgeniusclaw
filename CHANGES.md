@@ -76,7 +76,7 @@ a **local, OpenAI-compatible model server** instead.
 
 - added `models.providers.local` — `api: "openai-completions"`,
   `baseUrl: http://127.0.0.1:8000/v1` (vLLM's default);
-- `agents.defaults.model.primary` → `local/qwen/qwen3.5-9b`;
+- `agents.defaults.model.primary` → `local/qwen/qwen3.5-4b`;
 - added the matching `agents.defaults.models` allow-list entry, without which
   the agent rejects the model and refuses every turn
   (`scripts/in2n-member-home.py:74-76`);
