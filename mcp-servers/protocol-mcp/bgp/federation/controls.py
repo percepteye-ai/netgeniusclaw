@@ -38,7 +38,7 @@ _cache: dict = {}   # name -> (expiry_epoch, (available, detail))
 
 
 def _security_config_path() -> Path:
-    """The DefenseClaw security-mode config. Per CLAUDE.md this lives in
+    """The DefenseClaw security-mode config. Per DEVELOPMENT.md this lives in
     ~/.openclaw/config/openclaw.json — NOT the gateway's ~/.openclaw/openclaw.json,
     whose `security` object has a different schema (writing 'mode' there makes the
     gateway fail startup with 'security: Invalid input')."""

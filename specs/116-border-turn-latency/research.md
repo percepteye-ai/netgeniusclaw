@@ -323,7 +323,7 @@ contention scenario, not a fix for an observed one. Since (a) unrelated sessions
 concurrently with no gateway-imposed serialization, and (b) there is no real background call site in
 this codebase today to protect an interactive one from, building new NetClaw-side priority-queue
 machinery (tasks.md's originally-planned "branch (b)" in T033) would be speculative complexity added
-for a scenario that does not currently exist in this code — directly contrary to CLAUDE.md's own
+for a scenario that does not currently exist in this code — directly contrary to DEVELOPMENT.md's own
 guidance against designing for hypothetical future requirements. **Decision: T033/T034 are satisfied
 by documenting this finding and verifying the existing concurrency behavior (already proven by
 T021) rather than building new scheduling logic.** If NetGeniusClaw later adds its own scheduled/background

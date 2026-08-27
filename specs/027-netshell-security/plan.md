@@ -36,7 +36,7 @@ Integrate Cisco DefenseClaw as the production security layer for NetGeniusClaw. 
 | IX. Security by Default | PASS | DefenseClaw IS the security enhancement |
 | X. Observability as a First-Class Citizen | PASS | DefenseClaw provides audit logging and SIEM |
 | XI. Full-Stack Artifact Coherence | PASS | Cleanup section ensures all artifacts updated |
-| XII. Documentation-as-Code | PASS | README, SOUL.md, CLAUDE.md updates planned |
+| XII. Documentation-as-Code | PASS | README, SOUL.md, DEVELOPMENT.md updates planned |
 | XIII. Credential Safety | PASS | DefenseClaw injects credentials at runtime |
 | XIV. Human-in-the-Loop | N/A | No external communications |
 | XV. Backwards Compatibility | PASS | Hobby mode preserves current behavior |
@@ -75,7 +75,7 @@ config/
 # Files to UPDATE (documentation):
 README.md                # Update security section
 SOUL.md                  # Update P18-P25 to reference DefenseClaw
-CLAUDE.md                # Update NetShell section to DefenseClaw
+DEVELOPMENT.md                # Update NetShell section to DefenseClaw
 
 # Files to CREATE:
 scripts/

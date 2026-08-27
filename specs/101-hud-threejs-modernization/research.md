@@ -228,7 +228,7 @@ Both entry points are affected: pointer and keyboard.
 `ui/netclaw-visual/package.json` | **Yes** | The dependency bump itself |
 Principle X (HUD first-class) | **Yes** | This *is* HUD work |
 Principle XI (full-stack coherence) | **Partial** | No new MCP server, no new skill, no installable component. No new capability counts to reconcile |
-`scripts/reconcile-mcp.py` | **Yes — must run** | CLAUDE.md mandates it before push; CI fails on non-zero. Expected to be unaffected, but "expected" is not "verified" |
+`scripts/reconcile-mcp.py` | **Yes — must run** | DEVELOPMENT.md mandates it before push; CI fails on non-zero. Expected to be unaffected, but "expected" is not "verified" |
 Principle XII (docs-as-code) | **Yes** | `ui/netclaw-visual/README.md` documents the renderer/post-processing stack |
 `THIRD_PARTY_NOTICES.md` | **Check** | Already exists in `ui/netclaw-visual/`; a three.js version reference may need updating |
 Principle XVII (milestone post) | Deferred | Drafted at completion, **offered never published** (Principle XIV) |

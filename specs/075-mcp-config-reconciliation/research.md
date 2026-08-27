@@ -141,7 +141,7 @@ scripts are correct.
 
 **The actual enforcement gap**: nothing calls them. `.github/workflows/` contains only
 `skill-review.yml`. A repository-wide search for invocations of either script finds matches only in
-prose — `README.md`, `CLAUDE.md`, `docs/COVERAGE-ROADMAP.md`, `mcp-servers/README.md`, and prior spec
+prose — `README.md`, `DEVELOPMENT.md`, `docs/COVERAGE-ROADMAP.md`, `mcp-servers/README.md`, and prior spec
 directories. No workflow, no shell script, no pre-commit hook runs either check.
 
 **Decision**: Do not modify the exit-code logic. Instead:

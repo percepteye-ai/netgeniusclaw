@@ -28,7 +28,7 @@ This feature:
 **Purpose**: Remove original NetShell artifacts that are replaced by DefenseClaw
 
 - [x] T001 Archive netshell/ directory to netshell.bak/ (preserve for reference)
-- [x] T002 [P] Remove NetShell Security Layer section from CLAUDE.md
+- [x] T002 [P] Remove NetShell Security Layer section from DEVELOPMENT.md
 - [x] T003 [P] Remove old NetShell section from scripts/install.sh (lines ~2847-2939)
 
 ---
@@ -165,12 +165,12 @@ This feature:
 
 ---
 
-## Phase 9: CLAUDE.md Agent Context (Priority: P2)
+## Phase 9: DEVELOPMENT.md Agent Context (Priority: P2)
 
 **Goal**: Update agent context for DefenseClaw awareness
 
-- [x] T045 [US7] Add DefenseClaw section to CLAUDE.md (replace NetShell section)
-- [x] T046 [US7] Document key DefenseClaw commands in CLAUDE.md
+- [x] T045 [US7] Add DefenseClaw section to DEVELOPMENT.md (replace NetShell section)
+- [x] T046 [US7] Document key DefenseClaw commands in DEVELOPMENT.md
 - [x] T047 [P] [US7] Add security mode detection guidance
 
 **Checkpoint**: Agent is DefenseClaw-aware
@@ -207,7 +207,7 @@ Phase 1 (Cleanup) ──► Phase 2 (Foundation) ──► Phase 3 (US1 Install)
                                                       │
                                                       ├──► Phase 8 (Skills/MCPs)
                                                       │
-                                                      └──► Phase 9 (CLAUDE.md)
+                                                      └──► Phase 9 (DEVELOPMENT.md)
                                                                 │
                                                                 └──► Phase 10 (Polish)
 ```
@@ -244,7 +244,7 @@ Phase 1 (Cleanup) ──► Phase 2 (Foundation) ──► Phase 3 (US1 Install)
 | `scripts/install.sh` | Add DefenseClaw section, remove NetShell |
 | `README.md` | Add Enterprise Security section |
 | `SOUL.md` | Update P18-P25 for DefenseClaw |
-| `CLAUDE.md` | Replace NetShell with DefenseClaw context |
+| `DEVELOPMENT.md` | Replace NetShell with DefenseClaw context |
 | `config/openclaw.json` | Add security.mode field |
 | `workspace/skills/SKILL-SCHEMA.md` | Update for DefenseClaw |
 | `mcp-servers/README.md` | Add DefenseClaw note |
@@ -268,7 +268,7 @@ Phase 1 (Cleanup) ──► Phase 2 (Foundation) ──► Phase 3 (US1 Install)
 | 6. US4 Docs | 13 | 2 |
 | 7. SOUL | 5 | 2 |
 | 8. Skills/MCPs | 6 | 2 |
-| 9. CLAUDE.md | 3 | 1 |
+| 9. DEVELOPMENT.md | 3 | 1 |
 | 10. Polish | 6 | 2 |
 | **Total** | **53** | **15** |
 

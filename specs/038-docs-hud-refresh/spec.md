@@ -97,14 +97,14 @@ As a contributor or advanced user, I want SOUL files to reflect current architec
 - **FR-005**: Feature descriptions MUST match current implementation capabilities
 - **FR-006**: Visual HUD references MUST accurately describe current HUD appearance
 - **FR-007**: SOUL.md MUST reflect current architecture patterns
-- **FR-008**: CLAUDE.md MUST include recent feature additions from PRs #031-#075
+- **FR-008**: DEVELOPMENT.md MUST include recent feature additions from PRs #031-#075
 - **FR-009**: All documentation MUST use consistent terminology and naming
 
 ### Key Entities
 
 - **README.md**: Primary user-facing documentation with skill counts, feature lists, and getting started guide
 - **SOUL.md/SOUL Files**: Architecture and design philosophy documentation
-- **CLAUDE.md**: AI-readable project context and guidelines
+- **DEVELOPMENT.md**: AI-readable project context and guidelines
 - **Visual HUD**: OpenClaw's visual display interface for NetGeniusClaw capabilities
 - **openclaw.json**: Configuration file containing MCP server definitions (source of truth for integrations)
 
@@ -139,7 +139,7 @@ As a contributor or advanced user, I want SOUL files to reflect current architec
 |------|---------------|------------------|
 | `README.md` | Shows "113 skills", "67 MCP integrations", "48 integrations", "103 skills" | Update all counts to 179 skills, 43 MCP servers; add missing integrations |
 | `ui/netclaw-visual/README.md` | Visual HUD documentation | Update skill/integration counts, verify accuracy |
-| `CLAUDE.md` | Auto-generated from feature plans | Verify all recent features included |
+| `DEVELOPMENT.md` | Auto-generated from feature plans | Verify all recent features included |
 | `workspace/SOUL.md` | Architecture documentation | Verify current patterns are documented |
 
 ### PRs to Document (Undocumented Changes)

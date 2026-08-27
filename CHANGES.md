@@ -117,20 +117,39 @@ Twitter handle** into the agent's system prompt, so the agent introduced itself
 to strangers as a specific real person unconnected to this deployment. It now
 reads `TWITTER_HANDLE` and omits the handle when unset.
 
+### `CLAUDE.md` → `DEVELOPMENT.md`
+
+Renamed after checking what OpenClaw actually does with it, rather than
+assuming. Two facts settled it:
+
+- `loadContextFileFromDir` tries `AGENTS.md`, `AGENTS.MD`, `CLAUDE.md`,
+  `CLAUDE.MD` and takes the **first that exists**. This repo has `AGENTS.md` at
+  its root, so `CLAUDE.md` was **already shadowed and never loaded as agent
+  context**. Removing it changes nothing at runtime.
+- The file was never agent context anyway. It is Spec Kit's generated
+  *development* guidelines — Active Technologies, Project Structure, Commands,
+  Code Style, Recent Changes — written for someone working ON the repo. Folding
+  it into `AGENTS.md` would have been the wrong move twice over: wrong audience,
+  and 236 lines of build metadata taxing every conversation, since `AGENTS.md`
+  is the bootstrap file re-injected after every compaction
+  (`AGENTS_BOOTSTRAP_FILENAME`).
+
+`.specify/scripts/bash/update-agent-context.sh` now writes `DEVELOPMENT.md`
+under a `dev` target, and 28 files referencing the old name were updated.
+
 ### What was deliberately NOT renamed
 
-- **`CLAUDE.md`** and `.specify/init-options.json`'s agent selector. That
-  filename is an OpenClaw *runtime convention* — OpenClaw's own distribution
-  looks for it — not a dependency on any vendor's service. Renaming it stops the
-  runtime loading that context. Same class as `netclaw_tokens` and the FRR
-  container names in §1.
-- **Third-party names that must resolve**: `@anthropic-ai/microsoft-graph-mcp`
-  (13 files — and `scripts/check-package-references.py` exists precisely to
-  record that this package **404s**, so renaming it destroys the finding),
-  `anthropics/skills` (6 files), `opsmill/claude-marketplace`.
-- **`docs/ietf/`** — `draft-capobianco-ncfed-00` is a submitted IETF
-  Internet-Draft. Editing a published standards document to say something it
-  does not say is not a rename.
+**Third-party names that must resolve.** `@anthropic-ai/microsoft-graph-mcp`
+— and `scripts/check-package-references.py` exists precisely to record that this
+package **404s**, so renaming it destroys the finding — plus `anthropics/skills`
+and `opsmill/claude-marketplace`. A renamed dependency points at nothing.
+
+**`docs/ietf/`.** `draft-capobianco-ncfed-00` is a submitted IETF
+Internet-Draft. Editing a published standards document to say something it does
+not say is not a rename. A bulk pass garbled it and it was restored verbatim.
+
+**`.gitignore`'s `.claude` entry**, which stops a contributor's local tooling
+directory being committed. Removing it causes the thing it prevents.
 
 ## What is NOT in this fork
 

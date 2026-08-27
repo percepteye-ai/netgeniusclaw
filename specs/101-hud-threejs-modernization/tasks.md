@@ -154,7 +154,7 @@ must not make. All eight tasks are independent of one another → all `[P]`.
 ## Phase 8: Polish & Cross-Cutting Concerns
 
 - [x] T040 [P] Verify preservation constraints per [quickstart.md](./quickstart.md) §7: chat interface untouched (FR-037), right-hand info bar untouched (FR-037), no sibling moves on select/expand (FR-038), `git diff --stat -- ui/netclaw-visual/server.js` **empty** (FR-039), a11y tree and keyboard nav functional with `aria-expanded` in step (FR-040).
-- [x] T041 [P] Run `python3 scripts/reconcile-mcp.py >/dev/null 2>&1; echo $?` → `0` (FR-027). CI runs the same command and fails the merge on non-zero. **Never read this exit code through a pipe** (CLAUDE.md).
+- [x] T041 [P] Run `python3 scripts/reconcile-mcp.py >/dev/null 2>&1; echo $?` → `0` (FR-027). CI runs the same command and fails the merge on non-zero. **Never read this exit code through a pipe** (DEVELOPMENT.md).
 - [x] T042 [P] Confirm `tests/n2n/` is unaffected: `/usr/bin/python3 -m pytest tests/n2n/ -q` stays green — this feature touches no Python.
 - [x] T043 Confirm every requirement has evidence (SC-009): a build result, a screenshot, or a test — never inspection alone. Any requirement without evidence is not done.
 - [ ] T044 Draft the Principle XVII milestone blog post as `docs/blog/2026-08-XX-hud-threejs-modernization.md`, following the existing `docs/blog/` convention. **Offer it — never publish unprompted** (Principle XIV).

@@ -57,7 +57,7 @@ rejected that).
   server or tool.
 - **VII. Skill Modularity**: N/A — no skill changes.
 - **XI. Full-Stack Artifact Coherence**: Satisfied — this plan's own agent-context update
-  (`update-agent-context.sh`) keeps `CLAUDE.md` in sync, per the same discipline every prior spec in
+  (`update-agent-context.sh`) keeps `DEVELOPMENT.md` in sync, per the same discipline every prior spec in
   this series followed.
 
 No violations. Gate passes without complexity justification.

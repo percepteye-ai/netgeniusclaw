@@ -19,7 +19,7 @@
 - [x] **workspace/skills/auvik-lifecycle/SKILL.md** created.
 - [x] **workspace/skills/auvik-performance/SKILL.md** created.
 - [x] **.gitignore** — `!mcp-servers/auvik-mcp/` (server is git-ignored-by-default like its peers; explicitly tracked).
-- [ ] **CLAUDE.md / AGENTS.md** — optional (not in the XI list); left to the auto-generated SDD context refresh.
+- [ ] **DEVELOPMENT.md / AGENTS.md** — optional (not in the XI list); left to the auto-generated SDD context refresh.
 - [x] **specs/036-auvik-mcp-server/gait-session-log.md** — kept current; final summary commit (Principle IV).
 - [x] **Existing skills verified unbroken** (SC-004) — `openclaw.json` valid; `suzieq` server still parses.
 - [x] **WordPress milestone blog drafted** (Principle XVII) — `docs/blog/2026-06-21-auvik-mcp.md`; WordPress MCP unavailable in this shell → publish manually (noted in GAIT log).

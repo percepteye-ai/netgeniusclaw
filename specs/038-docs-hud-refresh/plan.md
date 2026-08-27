@@ -52,7 +52,7 @@ specs/038-docs-hud-refresh/
 ```text
 README.md                           # Primary user-facing docs
 ui/netclaw-visual/README.md         # Visual HUD documentation
-CLAUDE.md                           # AI-readable context (auto-generated)
+DEVELOPMENT.md                           # AI-readable context (auto-generated)
 workspace/SOUL.md                   # Architecture documentation
 ```
 
@@ -134,9 +134,9 @@ Since this is a documentation-only feature, the "design" consists of the update 
    - Verify architecture patterns are current
    - Add any missing capability summaries
 
-4. **CLAUDE.md Verification** (P3 priority)
-   - CLAUDE.md is auto-generated from feature plans
-   - Verify recent features are included via CLAUDE.md generation
+4. **DEVELOPMENT.md Verification** (P3 priority)
+   - DEVELOPMENT.md is auto-generated from feature plans
+   - Verify recent features are included via DEVELOPMENT.md generation
 
 ### Data Model
 

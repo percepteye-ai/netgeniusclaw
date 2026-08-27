@@ -275,7 +275,7 @@ Each edit follows the exact existing format (see [checklists/requirements.md] fo
 - [ ] **G5** `README.md` — add MCP-server row + 4-skill section; bump MCP and skill counts in headers/intro. Commit.
 - [ ] **G6** `SOUL.md` + `SOUL-SKILLS.md` — register the 4 skills + procedures; bump counts. Commit.
 - [ ] **G7** `TOOLS.md` — add Auvik connection-details line. Commit.
-- [ ] **G8** `CLAUDE.md` / `AGENTS.md` "Active Technologies"/"Recent Changes" — append the 036 entry if that pattern is maintained. Commit.
+- [ ] **G8** `DEVELOPMENT.md` / `AGENTS.md` "Active Technologies"/"Recent Changes" — append the 036 entry if that pattern is maintained. Commit.
 
 ---
 

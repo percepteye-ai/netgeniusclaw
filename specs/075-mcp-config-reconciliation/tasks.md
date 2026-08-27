@@ -44,7 +44,7 @@ wrong counts survived — and must be recorded as an amendment, not left as a si
 
 **Blocking prerequisites. No user story work starts until these are done.**
 
-- [X] T004 Audit every caller of both verifiers and record the result in `specs/075-mcp-config-reconciliation/research.md` as R10. Initial audit found only prose references (`README.md`, `CLAUDE.md`, `docs/COVERAGE-ROADMAP.md`, `mcp-servers/README.md`, and prior spec directories) and **no** invoking script or workflow — confirm this, since it determines whether `--warn-only` is insurance or a hard requirement.
+- [X] T004 Audit every caller of both verifiers and record the result in `specs/075-mcp-config-reconciliation/research.md` as R10. Initial audit found only prose references (`README.md`, `DEVELOPMENT.md`, `docs/COVERAGE-ROADMAP.md`, `mcp-servers/README.md`, and prior spec directories) and **no** invoking script or workflow — confirm this, since it determines whether `--warn-only` is insurance or a hard requirement.
 - [X] T005 Record the deliberate supersede of spec 047's exit-code contract in `specs/047-docs-inventory-reconciliation/contracts/verify-inventory-counts-cli.md`: unlocatable claims become failures per FR-012, with a pointer to spec 075 and the rationale. Also note the exit-`2` semantic widening (bad arguments, per contracts/reconcile-cli.md) so the two contracts do not diverge on a second axis unremarked. Do not silently diverge from a ratified contract.
 - [ ] T006 [P] Add a `dropped` integration record store — a plain data file plus loader, sited alongside `EXTERNAL_INTEGRATIONS` in `scripts/verify-inventory-counts.py` so the three states live in one place. Each record carries name and reason, per data-model.md Entity: Integration (FR-016).
 - [X] T006a **[moved from Phase 9 per analyze finding I1]** Rewrite the R0 body of `docs/COVERAGE-ROADMAP.md` (lines ~139–250), which still carries the superseded Bucket A/B/C framing and instructs work the ratified spec contradicts — "Fix Bucket A (20 unregistered)" (they are deliberate externals) and "Fix Bucket C (82 undeployed)" (live config is explicitly OUT OF SCOPE per Resolved Clarification 1). Must land early: R1–R24 will read this document during this feature's implementation.
@@ -184,7 +184,7 @@ message names the surface and item. Revert; confirm exit 0.
 - [X] T044 [P] [US5] Publish `docs/ADDING-AN-MCP.md` from `specs/075-mcp-config-reconciliation/quickstart.md`, covering integration-kind selection, registration, state recording, installer coverage, documentation surfaces, and verification (FR-023).
 - [X] T045 [US5] Enumerate every Constitution Principle XI artifact in the procedure (FR-024), and state plainly that the counts are the step most often forgotten — they were wrong in 9 places.
 - [ ] T046 [US5] Validate the procedure end to end against one integration, confirming the final step demonstrates installability rather than mere presence in a file (SC-010).
-- [X] T047 [P] [US5] Link `docs/ADDING-AN-MCP.md` from `README.md`, `CLAUDE.md` and `docs/COVERAGE-ROADMAP.md` so R1–R24 find it without being told.
+- [X] T047 [P] [US5] Link `docs/ADDING-AN-MCP.md` from `README.md`, `DEVELOPMENT.md` and `docs/COVERAGE-ROADMAP.md` so R1–R24 find it without being told.
 
 ---
 

@@ -154,7 +154,7 @@ the log becomes readable *before* the risky dial-scheduling change is verified a
 
 - [x] T043 [P] Add `n2n_forget_endpoint` to `TOOLS.md`; update the `n2n-mcp` count to 39.
 - [x] T044 [P] Update `README.md` if it states an `n2n-mcp` tool count (Constitution XII — counts must be accurate; nine drifted unnoticed before spec 075).
-- [x] T045 Run `python3 scripts/reconcile-mcp.py >/dev/null 2>&1; echo $?` — must be `0`. **CI runs the same command and fails the merge on non-zero.** Never read this exit code through a pipe (CLAUDE.md).
+- [x] T045 Run `python3 scripts/reconcile-mcp.py >/dev/null 2>&1; echo $?` — must be `0`. **CI runs the same command and fails the merge on non-zero.** Never read this exit code through a pipe (DEVELOPMENT.md).
 - [x] T046 Run the full suite: `/usr/bin/python3 -m pytest tests/n2n/ -q`. All 62 pre-existing files plus the 8 added here must pass.
 - [x] T047 Answer the deferred Out-of-Scope question explicitly: **should the dampening principle also govern BGP session retry reporting?** The `fd00:ee::0` flap is config, not code, but exhibits the identical defect shape (spec.md Out of Scope). Record the answer — a follow-on spec, or a documented decision not to.
 - [ ] T048 Walk [quickstart.md](./quickstart.md) §2–§7 against the running daemon and tick every box, including the §6 regression guards.

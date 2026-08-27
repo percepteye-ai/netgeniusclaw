@@ -155,7 +155,7 @@ The following artifacts from the original NetShell attempt should be removed/arc
 - `netshell/policies/*.yaml` - DefenseClaw has its own policy system
 - `netshell/scripts/*.py` - DefenseClaw provides its own CLI
 - References in SOUL.md P18-P25 - Update to reference DefenseClaw
-- References in CLAUDE.md - Update to reference DefenseClaw
+- References in DEVELOPMENT.md - Update to reference DefenseClaw
 - NetShell section in install.sh - Replace with DefenseClaw
 
 ## Architecture Overview

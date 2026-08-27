@@ -36,7 +36,7 @@
 - [x] Data-model.md updated for DefenseClaw (minimal - config only)
 - [x] Quickstart.md updated with validation scenarios
 - [x] Plan.md complete with constitution check (all PASS)
-- [x] Agent context (CLAUDE.md) updated
+- [x] Agent context (DEVELOPMENT.md) updated
 
 ## Implementation Complete
 
@@ -66,7 +66,7 @@
 - `scripts/install.sh` - Replaced NetShell section with DefenseClaw
 - `README.md` - Added Enterprise Security section
 - `SOUL.md` - Updated P18-P25 for DefenseClaw
-- `CLAUDE.md` - Replaced NetShell with DefenseClaw context
+- `DEVELOPMENT.md` - Replaced NetShell with DefenseClaw context
 - `config/openclaw.json` - Updated security.mode field
 - `workspace/skills/SKILL-SCHEMA.md` - Updated for DefenseClaw
 

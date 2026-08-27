@@ -10,7 +10,7 @@ Auto-generated from all feature plans. Last updated: 2026-08-17
 - N/A (stateless visualization — all data fetched on demand from MCP servers) (005-canvas-a2ui-integration)
 - Python 3.10+ + FastMCP (mcp SDK), httpx (async HTTP client), python-dotenv (001-suzieq-mcp-server)
 - N/A (stateless proxy to SuzieQ REST API) (001-suzieq-mcp-server)
-- Python 3.10+ + model-provider (SDK with count_tokens), toon-format (TOON serialization), FastMCP (existing MCP framework) (006-token-optimization)
+- Python 3.10+ + the model server's /tokenize endpoint (exact counts), toon-format (TOON serialization), FastMCP (existing MCP framework) (006-token-optimization)
 - N/A (in-memory session ledger; no persistent storage) (006-token-optimization)
 - N/A (no server code — Jenkins plugin is Java-based and runs inside Jenkins). Skill documentation and configuration files only. + Jenkins 2.533+ with MCP Server plugin (v0.158+), MCP Java SDK 0.17.2 (007-jenkins-mcp-server)
 - N/A (stateless — Jenkins maintains all job/build state) (007-jenkins-mcp-server)

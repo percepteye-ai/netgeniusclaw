@@ -352,7 +352,7 @@ unchanged scene.
   analysis: neither `README.md` nor `THIRD_PARTY_NOTICES.md` currently cites a three.js
   version at all**, so this is an addition, not an edit. `THIRD_PARTY_NOTICES.md` is out of
   scope — it covers adapted third-party *source* (Jack Rabbit), not dependency versions.
-- **FR-027**: `scripts/reconcile-mcp.py` MUST exit 0 (CLAUDE.md; CI gate).
+- **FR-027**: `scripts/reconcile-mcp.py` MUST exit 0 (DEVELOPMENT.md; CI gate).
 - **FR-028**: The upgrade MUST be verifiable without disturbing the running
   `netclaw-hud.service`, or the disruption MUST be an explicit confirmed step.
 

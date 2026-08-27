@@ -10,7 +10,7 @@ zero coverage, and every existing test lives on feature 072's pure side (researc
 verification is not a nicety here, it is the only evidence for half the requirements.
 
 > **Do not read an exit code through a pipe.** `cmd | tail` reports `tail`'s status. Use
-> `cmd >/dev/null 2>&1; echo $?` (CLAUDE.md — this mistake misdiagnosed spec 075).
+> `cmd >/dev/null 2>&1; echo $?` (DEVELOPMENT.md — this mistake misdiagnosed spec 075).
 
 ---
 

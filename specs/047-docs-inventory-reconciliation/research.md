@@ -6,7 +6,7 @@ No `NEEDS CLARIFICATION` markers remain in the Technical Context — this featur
 
 **Decision**: Skill count = number of directories under `workspace/skills/` that contain a `SKILL.md` file, excluding `SKILL-SCHEMA.md` (a schema reference file at the top level of `workspace/skills/`, not a skill directory).
 
-**Rationale**: `workspace/skills/` is the single deployed location the runtime agent reads from (per CLAUDE.md and SOUL.md), and every skill directory found there during this session's audit (190 total) contained a `SKILL.md`. Counting `SKILL.md` presence rather than raw directory count guards against a future stray non-skill directory (e.g., a `.gitkeep` placeholder or WIP scratch folder) silently inflating the count.
+**Rationale**: `workspace/skills/` is the single deployed location the runtime agent reads from (per DEVELOPMENT.md and SOUL.md), and every skill directory found there during this session's audit (190 total) contained a `SKILL.md`. Counting `SKILL.md` presence rather than raw directory count guards against a future stray non-skill directory (e.g., a `.gitkeep` placeholder or WIP scratch folder) silently inflating the count.
 
 **Alternatives considered**:
 - *Count raw directories via `ls | wc -l`*: simplest, matches this session's manual audit exactly, but has no protection against non-skill directories being miscounted. Rejected in favor of the `SKILL.md`-presence check, which is one `os.path.exists` check more robust for near-zero extra cost.

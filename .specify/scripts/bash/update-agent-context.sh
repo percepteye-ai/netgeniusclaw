@@ -61,7 +61,7 @@ NEW_PLAN="$IMPL_PLAN"  # Alias for compatibility with existing code
 AGENT_TYPE="${1:-}"
 
 # Agent-specific file paths  
-CLAUDE_FILE="$REPO_ROOT/CLAUDE.md"
+DEVELOPMENT_FILE="$REPO_ROOT/DEVELOPMENT.md"
 GEMINI_FILE="$REPO_ROOT/GEMINI.md"
 COPILOT_FILE="$REPO_ROOT/.github/agents/copilot-instructions.md"
 CURSOR_FILE="$REPO_ROOT/.cursor/rules/specify-rules.mdc"
@@ -615,8 +615,8 @@ update_specific_agent() {
     local agent_type="$1"
     
     case "$agent_type" in
-        agent)
-            update_agent_file "$CLAUDE_FILE" "Claude Code" || return 1
+        dev)
+            update_agent_file "$DEVELOPMENT_FILE" "Development guidelines" || return 1
             ;;
         gemini)
             update_agent_file "$GEMINI_FILE" "Gemini CLI" || return 1
@@ -734,7 +734,7 @@ update_all_existing_agents() {
     _updated_paths=()
     local _all_ok=true
 
-    _update_if_new "$CLAUDE_FILE" "Claude Code"           || _all_ok=false
+    _update_if_new "$DEVELOPMENT_FILE" "Development guidelines" || _all_ok=false
     _update_if_new "$GEMINI_FILE" "Gemini CLI"             || _all_ok=false
     _update_if_new "$COPILOT_FILE" "GitHub Copilot"        || _all_ok=false
     _update_if_new "$CURSOR_FILE" "Cursor IDE"             || _all_ok=false
@@ -761,7 +761,7 @@ update_all_existing_agents() {
     # If no agent files exist, create a default the agent file
     if [[ "$_found_agent" == false ]]; then
         log_info "No existing agent files found, creating default the agent file..."
-        update_agent_file "$CLAUDE_FILE" "Claude Code" || return 1
+        update_agent_file "$DEVELOPMENT_FILE" "Claude Code" || return 1
     fi
 
     [[ "$_all_ok" == true ]]

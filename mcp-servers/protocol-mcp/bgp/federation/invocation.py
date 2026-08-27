@@ -64,7 +64,7 @@ def _security_mode() -> str:
     with DefenseClaw fully enabled.
 
     controls._security_config_path() reads ~/.openclaw/config/openclaw.json,
-    which is where the mode actually lives (see CLAUDE.md and that docstring).
+    which is where the mode actually lives (see DEVELOPMENT.md and that docstring).
     """
     from .controls import security_mode
     return security_mode()

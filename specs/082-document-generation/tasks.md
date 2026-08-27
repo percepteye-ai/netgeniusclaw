@@ -251,7 +251,7 @@ fields and unfilled fields are actually unfilled.
 - [X] T124 Create `specs/082-document-generation/VERIFICATION.md` with a per-format table distinguishing **produced-and-opened** from **executed-without-error**, and mark anything uninspected as unverified or cut (FR-042, FR-043, SC-020). Include the T106 found-not-fixed list if any
 - [X] T124a In `VERIFICATION.md`, record the **iN2N decision** (FR-039): this capability is Border-only because it holds no credentials and composes across domains, so the five member artifacts plus a mesh restart are **not triggered** — and state that they apply in full if a member is ever given it. A conditional requirement resolved silently reads as an omitted one (research D11)
 - [X] T125 Run `bash tests/document/run-tests.sh` and confirm all suites pass
-- [X] T126 Run `python3 scripts/reconcile-mcp.py; echo $?` and confirm **exit 0 across all four surfaces** (FR-040) — read the exit code directly, never through a pipe (CLAUDE.md: `cmd | tail` reports `tail`'s status)
+- [X] T126 Run `python3 scripts/reconcile-mcp.py; echo $?` and confirm **exit 0 across all four surfaces** (FR-040) — read the exit code directly, never through a pipe (DEVELOPMENT.md: `cmd | tail` reports `tail`'s status)
 - [X] T127 Run `python3 scripts/verify-inventory-counts.py; echo $?` and confirm exit 0 with 209 skills / 155 integrations (FR-041, SC-021)
 - [X] T128 Run `python3 scripts/trace-skill.py document-generation` and `... network-report-documents` and confirm both resolve (SC-021)
 - [X] T129 Deploy to the live workspace and run an end-to-end generation from Slack, then **open the produced file** — the bug spec 080 shipped surfaced only in a live run, not in 24 passing tests

@@ -13,7 +13,7 @@ How to verify each fix against the running system. Follows Constitution VIII —
 > venv is the default in a dev shell — this is a real trap.
 
 > **Exit codes**: never read one through a pipe. `cmd | tail` reports `tail`'s status.
-> Use `cmd >/dev/null 2>&1; echo $?` (CLAUDE.md — this mistake misdiagnosed spec 075).
+> Use `cmd >/dev/null 2>&1; echo $?` (DEVELOPMENT.md — this mistake misdiagnosed spec 075).
 
 ---
 
@@ -335,4 +335,4 @@ grep -c 'n2n_forget_endpoint' TOOLS.md                        # must be >= 1
 grep -c '@mcp.tool' mcp-servers/n2n-mcp/server.py             # must be 39
 ```
 
-CI runs `reconcile-mcp.py` and fails the merge on non-zero (CLAUDE.md).
+CI runs `reconcile-mcp.py` and fails the merge on non-zero (DEVELOPMENT.md).

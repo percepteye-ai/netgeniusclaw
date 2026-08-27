@@ -165,7 +165,7 @@ Confirmed live — 14 such lines in the preceding 6 hours:
 | `.env.example` | **Yes** | New env vars (R8) — also Principle XIII |
 | `TOOLS.md` | **Yes** | New `n2n-mcp` tool (R7) changes the tool reference |
 | `README.md` | **Yes, if tool counts are stated** | Principle XII requires accurate counts |
-| `scripts/reconcile-mcp.py` | **Yes — must run** | CLAUDE.md mandates it before push; CI fails on non-zero |
+| `scripts/reconcile-mcp.py` | **Yes — must run** | DEVELOPMENT.md mandates it before push; CI fails on non-zero |
 | `catalog.sh` / `install-steps.sh` | No | No new installable component |
 | `ui/netclaw-visual/` | No | No new integration; peer health already rendered |
 | `SOUL.md` / `SKILL.md` | No | No new skill |

@@ -56,7 +56,7 @@
   - `NETCLAW_LAB_MODE` (gnmi) vs `ITSM_LAB_MODE` (nautobot) inconsistency
     exists; pick `NETCLAW_LAB_MODE` to avoid introducing a third name.
   - Constitution coherence list includes `SOUL-SKILLS.md`, `AGENTS.md`,
-    `CLAUDE.md`, `DefenseClawMCPScan.md`, `DefenseClawSkillScan.md`,
+    `DEVELOPMENT.md`, `DefenseClawMCPScan.md`, `DefenseClawSkillScan.md`,
     `docs/` — verify each before assuming touched.
 - AskUserQuestion fired to confirm scope decisions:
   - **Q1**: v1 scope → Read + ITSM-gated writes (chose recommended).

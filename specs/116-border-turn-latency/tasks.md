@@ -292,7 +292,7 @@ confirm no added overhead.
       `netclaw-heartbeat` cron job runs entirely inside the OpenClaw gateway's own cron subsystem,
       never through this codebase's `run_agent_turn()`. Building new NetClaw-side priority-queue
       machinery for a background caller that does not exist would be speculative complexity for a
-      hypothetical scenario (CLAUDE.md: "Don't design for hypothetical future requirements").
+      hypothetical scenario (DEVELOPMENT.md: "Don't design for hypothetical future requirements").
       FR-014/FR-015 are satisfied as-is by User Story 1's fix (T016) plus the existing,
       already-concurrent session model (T021/T031) — no code change needed beyond what US1 delivered.
 - [X] T034 [US3] **No longer applicable per T033's revised scope** — there is no cron/heartbeat call
