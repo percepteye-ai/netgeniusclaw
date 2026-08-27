@@ -6,9 +6,9 @@
 ## Module: counter.py
 
 ```python
-def count_tokens(text: str, model: str = "claude-opus-4-6") -> TokenCount:
+def count_tokens(text: str, model: str = "qwen/qwen3.5-4b") -> TokenCount:
     """
-    Count tokens using Anthropic API with local fallback.
+    Count tokens using the model endpoint with local fallback.
 
     Args:
         text: The text to count tokens for.
@@ -24,7 +24,7 @@ def count_tokens(text: str, model: str = "claude-opus-4-6") -> TokenCount:
 
 def count_message_tokens(
     messages: list[dict],
-    model: str = "claude-opus-4-6",
+    model: str = "qwen/qwen3.5-4b",
     system: str | None = None
 ) -> TokenCount:
     """
@@ -68,7 +68,7 @@ def serialize_response(data: Any) -> TOONResponse:
 def calculate_cost(
     input_tokens: int,
     output_tokens: int,
-    model: str = "claude-opus-4-6",
+    model: str = "qwen/qwen3.5-4b",
     cache_creation_tokens: int = 0,
     cache_read_tokens: int = 0
 ) -> CostEstimate:
@@ -172,4 +172,4 @@ result = serialize_response(original_data)
 return result.toon_data  # Returns TOON string (or JSON on fallback)
 ```
 
-This is a non-breaking change: the return type remains `str`, but the content format changes from JSON to TOON (which Claude can parse equivalently).
+This is a non-breaking change: the return type remains `str`, but the content format changes from JSON to TOON (which the agent can parse equivalently).

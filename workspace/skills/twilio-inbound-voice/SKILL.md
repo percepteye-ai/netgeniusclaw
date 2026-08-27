@@ -40,7 +40,7 @@ Webhook: POST /webhooks/twilio/voice
             │
             ├─► Audio In → Whisper STT → Text
             │
-            ├─► Text → Claude → Response
+            ├─► Text → the agent → Response
             │
             └─► Response → Twilio TTS → Audio Out
 ```

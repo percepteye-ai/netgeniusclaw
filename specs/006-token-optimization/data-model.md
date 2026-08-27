@@ -13,7 +13,7 @@ A record of token usage for a single LLM interaction or tool call.
 |-------|------|-------------|------------|
 | input_tokens | int | Number of input tokens consumed | >= 0 |
 | output_tokens | int | Number of output tokens generated | >= 0 |
-| model | str | Model identifier (e.g., "claude-opus-4-6") | Must be in PRICING dict |
+| model | str | Model identifier (e.g., "qwen/qwen3.5-4b") | Must be in PRICING dict |
 | timestamp | datetime | When the count was recorded | Auto-set to now() |
 | estimated | bool | True if count is approximate (API unavailable) | Default: False |
 | cache_creation_input_tokens | int | Tokens used to create cache | >= 0, default 0 |

@@ -10,9 +10,10 @@ It is also why this server has ~21 parameterised tools instead of mirroring the
 community servers, which ship 106 (FortiManager), 69 (FortiAnalyzer) and 204+
 (FortiOS) — any one of which blows the budget several times over on its own.
 
-Counting: the Anthropic SDK's `count_tokens` when available (the method feature
-006 established), otherwise a conservative character-based estimate. The estimate
-is deliberately pessimistic so a passing local run cannot be an optimistic one.
+Counting: the SERVING MODEL's own tokenizer when a model server is reachable
+(`netclaw_tokens.counter`, which asks it directly), otherwise a conservative
+character-based estimate. The estimate is deliberately pessimistic so a passing
+local run cannot be an optimistic one.
 
 Runs with NO appliance.
 """
@@ -30,21 +31,26 @@ CEILING = 5000
 
 
 def count_tokens(text: str) -> tuple[int, str]:
-    """Return (tokens, method). Prefers a real tokenizer; falls back pessimistically."""
-    try:
-        import anthropic  # type: ignore
+    """Return (tokens, method). Prefers a real tokenizer; falls back pessimistically.
 
-        client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", "x"))
-        result = client.messages.count_tokens(
-            model="claude-sonnet-5",
-            messages=[{"role": "user", "content": text}],
-        )
-        return result.input_tokens, "anthropic.count_tokens"
-    except Exception:  # noqa: BLE001 - offline/no key is normal in CI
-        # ~3.4 chars/token for JSON with many short identifiers. Lower divisor =
-        # higher estimate = fails sooner. Erring toward false alarm is correct
-        # for a budget check.
-        return int(len(text) / 3.4), "char-estimate (conservative)"
+    The shared counter asks the model server that actually serves the model, so
+    the number is for the tokenizer in use rather than some other vendor's.
+    Its own fallback is len/4; this one keeps len/3.4, because a budget check
+    that guesses LOW passes runs it should have failed.
+    """
+    try:
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+        from netclaw_tokens.counter import count_tokens as _count  # type: ignore
+
+        result = _count(text, model=os.environ.get("NETGENIUSCLAW_MODEL", ""))
+        if not result.estimated:
+            return result.input_tokens, "model-server /tokenize"
+    except Exception:  # noqa: BLE001 - no model server is normal in CI
+        pass
+    # ~3.4 chars/token for JSON with many short identifiers. Lower divisor =
+    # higher estimate = fails sooner. Erring toward false alarm is correct
+    # for a budget check.
+    return int(len(text) / 3.4), "char-estimate (conservative)"
 
 
 #: Verbs that would indicate a mutating tool. FR-034 — this feature queries public

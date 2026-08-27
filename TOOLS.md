@@ -40,7 +40,7 @@ All credentials are in `~/.openclaw/.env`. Never put credentials in skill files 
 - Azure Network MCP   → AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID
 - Canvas/A2UI Viz     → No new credentials (uses existing MCP server connections)
 - Chrome DevTools MCP  → No credentials, no env vars at all (config is CLI flags only; auth is via manual browser sign-in)
-- Token Optimization  → ANTHROPIC_API_KEY (reused), NETCLAW_TOKEN_PRICING_OVERRIDE (optional)
+- Token Optimization  → NETGENIUSCLAW_MODEL_API_KEY (reused), NETCLAW_TOKEN_PRICING_OVERRIDE (optional)
 - GitLab MCP          → GITLAB_PERSONAL_ACCESS_TOKEN, GITLAB_API_URL (default: gitlab.com)
 - Jenkins MCP         → JENKINS_URL, JENKINS_AUTH_BASE64 (remote HTTP, Basic Auth)
 - Auvik              → AUVIK_USERNAME, AUVIK_API_KEY, AUVIK_BASE_URL (optional)

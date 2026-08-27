@@ -171,7 +171,7 @@ def check_doc_claims(skill_count, mcp_count):
     # (file, description, compiled pattern, [(kind, capture group index), ...])
     headline_patterns = [
         (README, "top prose (skills + MCP)",
-         re.compile(r"Claude,\s*(\d+)\s*skills,\s*and\s*(\d+)\s*MCP integrations"),
+         re.compile(r"the agent,\s*(\d+)\s*skills,\s*and\s*(\d+)\s*MCP integrations"),
          [("skill", 1), ("MCP", 2)]),
         # RETIRED by spec 075 (was: "installer prose (skills)" matching
         # r"deploys\s*(\d+)\s*skills", and "installer prose (MCP)" matching

@@ -879,7 +879,7 @@ function renderMetrics(graph) {
   dom.stats.skills.textContent = graph.stats.skillCount;
   dom.stats.devices.textContent = graph.stats.deviceCount;
   dom.stats.tools.textContent = graph.stats.toolEstimate;
-  dom.footerModel.textContent = graph.config?.agents?.defaults?.model?.primary?.replace('anthropic/', '') || 'unknown';
+  dom.footerModel.textContent = graph.config?.agents?.defaults?.model?.primary?.replace('model-provider/', '') || 'unknown';
   dom.footerGateway.textContent = graph.config?.gateway?.mode || 'unknown';
   dom.footerUpdated.textContent = new Date(graph.generatedAt).toLocaleTimeString();
 

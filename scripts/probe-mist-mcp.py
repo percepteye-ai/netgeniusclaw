@@ -5,7 +5,7 @@ Reads MIST_API_TOKEN, MIST_API_HOST and MIST_ORG_ID from the environment
 (`set -a; source ~/.openclaw/.env; set +a`).
 
     python3 scripts/probe-mist-mcp.py            # initialize + tools/list, chars/4 sizing
-    python3 scripts/probe-mist-mcp.py --count    # exact token count (needs ANTHROPIC_API_KEY)
+    python3 scripts/probe-mist-mcp.py --count    # exact token count (needs NETGENIUSCLAW_MODEL_API_KEY)
 
 Spec 095 measured 11,783 tokens against a 5,000 ceiling. A materially different
 number means Juniper changed the manifest and the adoption decision is stale.
@@ -19,7 +19,7 @@ import urllib.request
 ENDPOINT = os.environ.get("MIST_MCP_URL", "https://mcp.ai.juniper.net/mcp/mist")
 CEILING = 5000
 SPEC_095_TOTAL = 11783
-COUNT_MODEL = "claude-opus-4-5-20251101"
+COUNT_MODEL = "agent-opus-4-5-20251101"
 
 _session_id = None
 
@@ -74,25 +74,25 @@ def rpc(method, params=None, notify=False):
 
 
 def count_tokens(tools, instructions):
-    """Exact count via the Anthropic count_tokens endpoint, as a delta over baseline."""
-    key = os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
-        print("ANTHROPIC_API_KEY not set — cannot count exactly", file=sys.stderr)
-        return None
+    """Exact count via the the model provider count_tokens endpoint, as a delta over baseline."""
+    base = os.environ.get("NETGENIUSCLAW_MODEL_BASE_URL", "http://127.0.0.1:8000/v1")
+    key = os.environ.get("NETGENIUSCLAW_MODEL_API_KEY", "vllm-local")
+    root = base.rstrip("/")
+    if root.endswith("/v1"):
+        root = root[: -len("/v1")]
 
     def _count(payload):
+        """Exact count from the server serving the model — /tokenize sits at its root."""
         req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages/count_tokens",
+            root + "/tokenize",
             data=json.dumps(payload).encode(),
-            headers={
-                "content-type": "application/json",
-                "x-api-key": key,
-                "anthropic-version": "2023-06-01",
-            },
+            headers={"content-type": "application/json",
+                     "authorization": f"Bearer {key}"},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=60) as r:
-            return json.load(r)["input_tokens"]
+            body = json.load(r)
+            return body.get("count", len(body.get("tokens") or []))
 
     msg = [{"role": "user", "content": "hi"}]
     baseline = _count({"model": COUNT_MODEL, "messages": msg})

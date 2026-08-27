@@ -11,8 +11,8 @@ MCP integration count: 149
   + externally-installed (documented, not in config): 60
 
 Documentation check: FAIL
-  README.md:line 7 (top prose (skills + MCP)) claims "Claude, 198 skills, and 115 MCP integrations" (skill), computed 199
-  README.md:line 7 (top prose (skills + MCP)) claims "Claude, 198 skills, and 115 MCP integrations" (MCP), computed 149
+  README.md:line 7 (top prose (skills + MCP)) claims "the agent, 198 skills, and 115 MCP integrations" (skill), computed 199
+  README.md:line 7 (top prose (skills + MCP)) claims "the agent, 198 skills, and 115 MCP integrations" (MCP), computed 149
   README.md:line 242 (Visual HUD prose) claims "currently 113 MCP integrations and 191 skills" (MCP), computed 149
   README.md:line 242 (Visual HUD prose) claims "currently 113 MCP integrations and 191 skills" (skill), computed 199
   README.md:line 521 (MCP Servers section heading) claims "## MCP Servers (115)" (MCP), computed 149

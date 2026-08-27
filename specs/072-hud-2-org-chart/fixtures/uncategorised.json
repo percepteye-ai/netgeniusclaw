@@ -1271,7 +1271,7 @@
             "controls": {}
           },
           "llm": {
-            "primary_model": "anthropic/claude-sonnet-4-6",
+            "primary_model": "local/qwen/qwen3.5-4b",
             "guarded": false
           }
         },
@@ -5102,7 +5102,7 @@
     "missing": [],
     "strict_all": false,
     "model": {
-      "primary": "anthropic/claude-opus-5",
+      "primary": "model-provider/qwen/qwen3.5-4b",
       "guarded": false
     },
     "channel_security": {

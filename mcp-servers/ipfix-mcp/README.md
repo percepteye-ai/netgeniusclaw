@@ -43,9 +43,9 @@ Environment variables:
 python -m ipfix_mcp_server
 ```
 
-### With Claude Desktop
+### With the agent Desktop
 
-Add to your Claude Desktop MCP configuration:
+Add to your the agent Desktop MCP configuration:
 
 ```json
 {

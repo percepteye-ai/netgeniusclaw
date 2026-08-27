@@ -6,15 +6,16 @@ Generalizes the recipe proven live for the ipfabric member: from the Border's
 is SCOPED to one member:
   - mcp.servers  → filtered to the member's servers (+ memory-mcp)
   - plugins/channels → comms plugins stripped (they crash `openclaw agent --local`)
-  - models.providers.anthropic → a DIRECT Anthropic provider registered at the
-    member's tier model (so the member runs Claude without the DefenseClaw proxy)
+  - models.providers.local → a DIRECT OpenAI-compatible provider registered at
+    the member's tier model, so the member reaches its model without the
+    DefenseClaw proxy in the path
   - workspace → symlinked to the Border's (identity/skills); scope is enforced by
     the member's declared N2N_MEMBER_SCOPE + the trimmed MCP set
 Sets nothing live — just writes the member home. The member launcher points at it
 via OPENCLAW_STATE_DIR / OPENCLAW_CONFIG_PATH.
 
 Usage: python3 scripts/in2n-member-home.py --risk johns-risk --member ipfabric \
-         [--model claude-sonnet-5] [--anthropic-key-from ~/.openclaw/.env]
+         [--model qwen/qwen3.5-4b] [--model-key-from ~/.openclaw/.env]
 """
 import argparse, copy, importlib.util, json, os, sys
 
@@ -30,14 +31,31 @@ def _profiles():
     return m
 
 
-def _anthropic_key(env_path):
+def _model_key(env_path):
+    """The member's model credential, read from the risk's shared .env.
+
+    A self-hosted server often needs no real credential, so a MISSING key is
+    not fatal here -- `vllm-local` is the conventional placeholder and the
+    server ignores it. That is why this returns a default rather than None:
+    an absent key must not silently produce a member that cannot sample.
+    """
     try:
         for line in open(os.path.expanduser(env_path)):
-            if line.startswith("ANTHROPIC_API_KEY="):
+            if line.startswith("NETGENIUSCLAW_MODEL_API_KEY="):
                 return line.split("=", 1)[1].strip().strip('"').strip("'")
     except OSError:
         pass
-    return None
+    return os.environ.get("NETGENIUSCLAW_MODEL_API_KEY", "vllm-local")
+
+
+def _model_base_url(env_path):
+    try:
+        for line in open(os.path.expanduser(env_path)):
+            if line.startswith("NETGENIUSCLAW_MODEL_BASE_URL="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+    except OSError:
+        pass
+    return os.environ.get("NETGENIUSCLAW_MODEL_BASE_URL", "http://127.0.0.1:8000/v1")
 
 
 def main():
@@ -45,7 +63,7 @@ def main():
     ap.add_argument("--risk", required=True)
     ap.add_argument("--member", required=True, help="profile/member name, e.g. ipfabric")
     ap.add_argument("--model", default=None, help="override model (default: profile tier)")
-    ap.add_argument("--anthropic-key-from", default="~/.openclaw/.env")
+    ap.add_argument("--model-key-from", default="~/.openclaw/.env")
     ap.add_argument("--border-config", default=f"{HOME}/.openclaw/openclaw.json")
     args = ap.parse_args()
 
@@ -71,17 +89,18 @@ def main():
                            if not any(c in str(x).lower() for c in COMMS_PLUGINS)]
     m["channels"] = {}
 
-    # 3. register a DIRECT Anthropic provider at the member's tier model, AND
+    # 3. register a DIRECT OpenAI-compatible provider at the member's tier, AND
     #    whitelist that model for agent "main" (agents.defaults.models) — the
     #    agent rejects a --model override that isn't in its allow-list.
-    key = _anthropic_key(args.anthropic_key_from)
-    m.setdefault("models", {}).setdefault("providers", {})["anthropic"] = {
-        "baseUrl": "https://api.anthropic.com", "apiKey": key, "api": "anthropic-messages",
+    key = _model_key(args.model_key_from)
+    m.setdefault("models", {}).setdefault("providers", {})["local"] = {
+        "baseUrl": _model_base_url(args.model_key_from), "apiKey": key,
+        "api": "openai-completions",
         "models": [{"id": model, "name": model, "reasoning": False,
-                    "input": ["text", "image"], "contextWindow": 200000, "maxTokens": 64000}],
+                    "input": ["text"], "contextWindow": 131072, "maxTokens": 16384}],
     }
     allow = m.setdefault("agents", {}).setdefault("defaults", {}).setdefault("models", {})
-    allow.setdefault(f"anthropic/{model}", {"alias": "member"})
+    allow.setdefault(f"local/{model}", {"alias": "member"})
 
     # 4. write the scoped home + share the workspace (identity/skills) via symlink
     mh = f"{HOME}/.openclaw-{args.risk}-{name}"
@@ -94,7 +113,7 @@ def main():
 
     print(f"scoped home: {mh}")
     print(f"  mcp.servers: {list(m['mcp']['servers'].keys())}")
-    print(f"  model: {model}  (anthropic key: {'present' if key else 'MISSING'})")
+    print(f"  model: {model}  (model key: {'present' if key else 'MISSING'})")
     print(f"  OPENCLAW_STATE_DIR={mh}")
     print(f"  OPENCLAW_CONFIG_PATH={mh}/openclaw.json")
     print(f"  N2N_MEMBER_MODEL={model}")

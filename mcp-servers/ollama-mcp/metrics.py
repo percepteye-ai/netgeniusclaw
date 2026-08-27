@@ -3,7 +3,7 @@
 from typing import Dict
 from models import DelegationMetrics, DomainMetrics
 
-# Approximate cost per 1K tokens for Frontier model (Claude Opus 4)
+# Approximate cost per 1K tokens for a hosted frontier model
 FRONTIER_INPUT_COST_PER_1K = 0.015
 FRONTIER_OUTPUT_COST_PER_1K = 0.075
 
@@ -27,7 +27,7 @@ class MetricsTracker:
         self._metrics.total_generation_time_ms += generation_time_ms
 
         # Estimate Frontier tokens saved:
-        # The prompt + response that would have gone to Claude
+        # The prompt + response that would have gone to a hosted frontier model
         # Conservative estimate: local tokens ≈ what Frontier would have used
         if success:
             self._metrics.estimated_frontier_tokens_saved += estimated_tokens

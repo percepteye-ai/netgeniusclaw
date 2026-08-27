@@ -194,4 +194,4 @@ As a cost-conscious operator, I want to see how many Frontier tokens were saved 
 - FRR vtysh syntax is stable across the `frrouting/frr:latest` container image versions used in the lab.
 - The 32B model has sufficient capability to follow structured system prompts with explicit rules (confirmed by live test earlier in this session).
 - ContainerLab topology remains at 6 nodes (PE1, P1-P4, RR1) for the demo — expert models are tuned for this specific topology.
-- The Frontier model (Claude/Qwen/DeepSeek) can effectively validate outputs by comparing against expected patterns (e.g., "does this config have network statements under BGP? reject.").
+- The Frontier model (the agent/Qwen/DeepSeek) can effectively validate outputs by comparing against expected patterns (e.g., "does this config have network statements under BGP? reject.").

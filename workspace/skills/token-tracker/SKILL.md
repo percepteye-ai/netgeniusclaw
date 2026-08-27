@@ -32,7 +32,7 @@ This skill uses the `netclaw_tokens` shared library (`src/netclaw_tokens/`):
 
 | Module | Function | Purpose |
 |--------|----------|---------|
-| counter.py | count_tokens() | Count tokens via Anthropic API (fallback: len/4 estimate) |
+| counter.py | count_tokens() | Count tokens via the model endpoint (fallback: len/4 estimate) |
 | counter.py | count_message_tokens() | Count tokens for full message arrays |
 | cost_calculator.py | calculate_cost() | Calculate USD cost with model-aware pricing |
 | cost_calculator.py | get_pricing() | Look up model pricing (with env var override) |
@@ -112,9 +112,9 @@ Works out of the box with safe defaults. No configuration required.
         "overrideIncrementUsd": 2.0
       },
       "interfaceDefaults": {
-        "openai": { "model": "anthropic/claude-haiku-4-5", "thinkingLevel": "medium" },
-        "n2n": { "model": "anthropic/claude-haiku-4-5", "thinkingLevel": "medium" },
-        "discord": { "model": "anthropic/claude-haiku-4-5", "thinkingLevel": "low" }
+        "openai": { "model": "local/qwen/qwen3.5-4b", "thinkingLevel": "medium" },
+        "n2n": { "model": "local/qwen/qwen3.5-4b", "thinkingLevel": "medium" },
+        "discord": { "model": "local/qwen/qwen3.5-4b", "thinkingLevel": "low" }
       }
     }
   }
@@ -131,7 +131,7 @@ export NETCLAW_SESSION_BUDGET_USD=2.0  # Overrides config, takes effect next ses
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | API key for Anthropic token counting (already used by NetGeniusClaw) |
+| `NETGENIUSCLAW_MODEL_API_KEY` | Yes | API key for the model provider token counting (already used by NetGeniusClaw) |
 | `NETCLAW_TOKEN_PRICING_OVERRIDE` | No | JSON string to override default model pricing |
 | `NETCLAW_SESSION_BUDGET_USD` | No | Override session cost cap (default: 5.0) |
 
@@ -139,9 +139,9 @@ export NETCLAW_SESSION_BUDGET_USD=2.0  # Overrides config, takes effect next ses
 
 | Model | Input (per 1M) | Output (per 1M) |
 |-------|-----------------|------------------|
-| Claude Opus 4.6 | $5.00 | $25.00 |
-| Claude Sonnet 4.6 | $3.00 | $15.00 |
-| Claude Haiku 4.5 | $1.00 | $5.00 |
+| the agent Opus 4.6 | $5.00 | $25.00 |
+| the agent Sonnet 4.6 | $3.00 | $15.00 |
+| the agent Haiku 4.5 | $1.00 | $5.00 |
 
 Prompt caching discount: 90% off cached input tokens.
 
@@ -159,7 +159,7 @@ config = load_openclaw_config()  # Your config loader
 session_key = "agent:main:openai:abc-123"  # From gateway
 
 policy = resolve_session_config(config, session_key)
-# → BudgetPolicy(session_budget_usd=5.0, model="anthropic/claude-haiku-4-5", ...)
+# → BudgetPolicy(session_budget_usd=5.0, model="local/qwen/qwen3.5-4b", ...)
 
 ledger = SessionLedger(budget=policy)
 
@@ -175,7 +175,7 @@ ledger.record_tool_call()
 
 # ── After model response ──────────────────────────────────────
 tc = count_tokens("show BGP peers on router R1")
-cost = calculate_cost(tc.input_tokens, 382, model=policy.model or "claude-sonnet-4-6")
+cost = calculate_cost(tc.input_tokens, 382, model=policy.model or "qwen/qwen3.5-4b")
 ledger.record("pyats_show_bgp", tc, cost)
 
 # ── Footer (every response) ──────────────────────────────────

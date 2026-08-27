@@ -99,7 +99,7 @@ itsm:
 4. **process.no_new_privs** must be `true`
 5. **process.seccomp.deny** must include: `ptrace`, `mount`, `reboot`, `init_module`
 6. **network_policies.default_action** must be `deny`
-7. **network_policies.core_egress** must include Anthropic API
+7. **network_policies.core_egress** must include the model endpoint
 8. **credentials.inject** must never appear in filesystem_policy.workspace
 9. **audit.enabled** must be `true` for production
 10. **audit.format** must be `ocsf`
@@ -131,12 +131,12 @@ process:
 network_policies:
   default_action: deny
   core_egress:
-    - name: anthropic-api
-      host: api.anthropic.com
+    - name: model-provider-api
+      host: your model endpoint
       ports: [443]
       protocols: [https]
 credentials:
-  inject: [ANTHROPIC_API_KEY]
+  inject: [NETGENIUSCLAW_MODEL_API_KEY]
 audit:
   enabled: true
   format: ocsf

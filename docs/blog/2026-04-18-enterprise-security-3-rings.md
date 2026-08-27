@@ -57,7 +57,7 @@ DefenseClaw sits between NetGeniusClaw and the outside world, inspecting all tra
 NetGeniusClaw runs inside this protected environment with:
 - Full access to your skills and MCP servers
 - Slack/WebEx integration for user interaction
-- All the power of Claude, GPT, and other LLMs
+- All the power of the agent, GPT, and other LLMs
 - Complete audit trail of all actions
 
 ## One-Command Startup
@@ -93,7 +93,7 @@ The sandbox starts with a deny-by-default network policy. Only explicitly allowe
 | Category | Allowed Endpoints |
 |----------|-------------------|
 | **Messaging** | Slack, WebEx APIs |
-| **LLMs** | Anthropic, OpenAI |
+| **LLMs** | the model provider, OpenAI |
 | **MCPs** | DevNet, Datadog, Meraki, Splunk |
 | **Cloud** | AWS, Azure, GCP management APIs |
 | **DevOps** | GitHub, GitLab, Terraform, Vault |

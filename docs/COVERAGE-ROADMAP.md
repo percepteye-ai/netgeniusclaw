@@ -434,7 +434,7 @@ FortiAnalyzer-VM (separate 15-day trials) to verify 12 of the 21 tools; a Servic
 [measurements](../specs/095-juniper-mist/VERIFICATION.md)
 
 `junos-mcp-server` covers devices. Nothing covers Mist wired/wireless assurance or Marvis.
-Juniper ships an **official** Mist MCP server (Claude Desktop beta) — **measured and rejected**.
+Juniper ships an **official** Mist MCP server (the agent Desktop beta) — **measured and rejected**.
 
 > **Adoption is not available.** `https://mcp.ai.juniper.net/mcp/mist` exposes 7 tools costing
 > **11,783 tokens against the 5,000 ceiling (2.36×)**, counted with `count_tokens`, not estimated.
@@ -1216,7 +1216,7 @@ Landscape scan, 2026-07-30.
 - [Itential — The Ultimate MCP Guide for Network Automation (56 servers)](https://www.itential.com/resource/guide/the-ultimate-mcp-guide-for-network-automation/)
 - [wong2/awesome-mcp-servers](https://github.com/wong2/awesome-mcp-servers)
 - [anthropics/skills](https://github.com/anthropics/skills)
-- [Juniper — Mist MCP Server with Claude Desktop (official)](https://www.juniper.net/documentation/us/en/software/mist/mist-aiops/shared-content/topics/concept/juniper-mist-mcp-claude.html)
+- [Juniper — Mist MCP Server with the agent Desktop (official)](https://www.juniper.net/documentation/us/en/software/mist/mist-aiops/shared-content/topics/concept/juniper-mist-mcp-agent.html)
 - [nowireless4u/hpe-networking-mcp](https://github.com/nowireless4u/hpe-networking-mcp) · [secure-ssid/centralmcp](https://github.com/secure-ssid/centralmcp)
 - [rstierli/fortimanager-mcp](https://github.com/rstierli/fortimanager-mcp) · [paoloamato2/fortinet-mcp-server](https://mcpservers.org/servers/paoloamato2/fortinet-mcp-server) · [ivillagomez/fortigate-mcp](https://lobehub.com/mcp/ivillagomez-fortigate-mcp)
 - [cdot65/pan-os-mcp](https://github.com/cdot65/pan-os-mcp)

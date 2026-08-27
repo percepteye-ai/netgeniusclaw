@@ -227,7 +227,7 @@ Based on plan.md structure:
 - [x] T088 [P] Dockerfiles deferred (core implementation complete)
 - [x] T089 [P] Dockerfiles deferred (core implementation complete)
 - [x] T090 [P] Dockerfiles deferred (core implementation complete)
-- [x] T091 N/A - testbed.yaml is for pyATS devices, not MCP servers (configured in Claude Desktop)
+- [x] T091 N/A - testbed.yaml is for pyATS devices, not MCP servers (configured in the agent Desktop)
 - [x] T092 quickstart.md available in specs/010-telemetry-receivers/
 - [x] T093 tasks.md updated with completion status per Constitution XI
 - [x] T094 WordPress blog post can be created via /blog skill when ready

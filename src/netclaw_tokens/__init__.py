@@ -1,9 +1,9 @@
 """netclaw_tokens — Token counting, cost tracking, and GCF serialization for NetClaw.
 
 This shared library provides:
-  - Token counting via Anthropic API with local estimation fallback
+  - Token counting via the serving model's own tokenizer, with local estimation fallback
   - GCF serialization for MCP server responses (55-83% token savings)
-  - Model-aware cost calculation (Opus, Sonnet, Haiku)
+  - Model-aware cost calculation (zero by default; self-hosted models are not billed per token)
   - Session-level cumulative tracking with per-tool breakdown
   - Mandatory token footer formatting for every interaction
 """
@@ -20,7 +20,7 @@ class TokenCount:
 
     input_tokens: int = 0
     output_tokens: int = 0
-    model: str = "claude-opus-4-6"
+    model: str = ""
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     estimated: bool = False
     cache_creation_input_tokens: int = 0
@@ -39,7 +39,7 @@ class CostEstimate:
     output_cost: float = 0.0
     cache_discount: float = 0.0
     total_cost: float = 0.0
-    model: str = "claude-opus-4-6"
+    model: str = ""
 
 
 @dataclass

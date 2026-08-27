@@ -35,7 +35,7 @@
 
 **Decision**: Use stdio transport for local integration
 
-**Rationale**: Consistent with other MCP server integrations in NetGeniusClaw (CML, GNS3, GitLab, etc.). The community server supports stdio, SSE, and streamable HTTP — stdio is the standard for OpenClaw/Claude Desktop integration.
+**Rationale**: Consistent with other MCP server integrations in NetGeniusClaw (CML, GNS3, GitLab, etc.). The community server supports stdio, SSE, and streamable HTTP — stdio is the standard for OpenClaw/the agent Desktop integration.
 
 **Alternatives Considered**:
 - SSE transport: Useful for remote/web agents, not needed for local NetGeniusClaw

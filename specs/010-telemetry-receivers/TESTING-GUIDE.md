@@ -33,9 +33,9 @@ pip install -r requirements.txt
 
 ---
 
-## Step 2: Claude Desktop MCP Configuration
+## Step 2: the agent Desktop MCP Configuration
 
-Add these entries to your Claude Desktop MCP settings (`~/.config/claude-code/settings.json` or similar):
+Add these entries to your the agent Desktop MCP settings (`~/.config/agent-code/settings.json` or similar):
 
 ```json
 {
@@ -170,7 +170,7 @@ interface GigabitEthernet1/0/1
 
 ### 5.1 Start Syslog Receiver
 
-In Claude/NetClaw:
+In the agent/NetClaw:
 ```
 Start the syslog receiver on port 10514
 ```
@@ -199,7 +199,7 @@ end
 
 ### 5.3 Verify Syslog Reception
 
-In Claude/NetClaw:
+In the agent/NetClaw:
 ```
 Show the syslog receiver status
 Query syslog messages from the last 5 minutes
@@ -210,7 +210,7 @@ Show syslog severity counts
 
 ### 5.4 Start SNMP Trap Receiver
 
-In Claude/NetClaw:
+In the agent/NetClaw:
 ```
 Start the SNMP trap receiver on port 10162
 ```
@@ -232,7 +232,7 @@ snmp-server enable traps
 
 ### 5.6 Verify SNMP Trap Reception
 
-In Claude/NetClaw:
+In the agent/NetClaw:
 ```
 Show the SNMP trap receiver status
 Query SNMP traps received
@@ -243,7 +243,7 @@ Show trap counts by type
 
 ### 5.7 Start IPFIX Receiver
 
-In Claude/NetClaw:
+In the agent/NetClaw:
 ```
 Start the IPFIX/NetFlow receiver on port 2055
 ```
@@ -260,7 +260,7 @@ ping 8.8.8.8 repeat 100
 
 ### 5.9 Verify IPFIX Reception
 
-In Claude/NetClaw:
+In the agent/NetClaw:
 ```
 Show the IPFIX receiver status
 Query flow records received

@@ -2,7 +2,7 @@
 
 **Draft for review — not published.** Constitution Principle XVII requires John's sign-off first.
 
-*By John Capobianco and Claude · 2026-08-15*
+*By John Capobianco and the agent · 2026-08-15*
 
 John wanted to talk to NetGeniusClaw the way he already talks to everything else on his phone — "Hey Siri" —
 and asked for it the same day he was sitting at his Mac with an iPhone plugged in and a watch charging

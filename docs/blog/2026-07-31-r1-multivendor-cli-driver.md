@@ -2,7 +2,7 @@
 
 **Draft for review — not published.** Constitution Principle XVII requires John's sign-off first.
 
-*By John Capobianco and Claude · 2026-07-31*
+*By John Capobianco and the agent · 2026-07-31*
 
 NetGeniusClaw could reach network devices four ways, and every one was platform-bound: pyATS for Cisco,
 junos-mcp for Juniper, gNMI for telemetry, RADKit for cloud-relayed access. If you had a MikroTik edge

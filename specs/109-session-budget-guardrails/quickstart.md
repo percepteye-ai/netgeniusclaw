@@ -21,8 +21,8 @@ Add to your `openclaw.json` under `agents.defaults`:
         "maxToolCallsPerTurn": 20
       },
       "interfaceDefaults": {
-        "openai": { "model": "anthropic/claude-haiku-4-5" },
-        "n2n": { "model": "anthropic/claude-haiku-4-5" }
+        "openai": { "model": "local/qwen/qwen3.5-4b" },
+        "n2n": { "model": "local/qwen/qwen3.5-4b" }
       }
     }
   }

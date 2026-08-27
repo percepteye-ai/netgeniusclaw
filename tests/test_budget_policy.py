@@ -94,7 +94,7 @@ class TestLoadBudgetPolicy:
                 "defaults": {
                     "interfaceDefaults": {
                         "openai": {
-                            "model": "anthropic/claude-haiku-4-5",
+                            "model": "local/qwen/qwen3.5-4b",
                             "thinkingLevel": "medium",
                         }
                     }
@@ -102,7 +102,7 @@ class TestLoadBudgetPolicy:
             }
         }
         policy = load_budget_policy(config, interface_type="openai")
-        assert policy.model == "anthropic/claude-haiku-4-5"
+        assert policy.model == "local/qwen/qwen3.5-4b"
         assert policy.thinking_level == "medium"
 
     def test_interface_budget_override(self):
@@ -132,7 +132,7 @@ class TestLoadBudgetPolicy:
                 "defaults": {
                     "budget": {"sessionBudgetUsd": 7.0},
                     "interfaceDefaults": {
-                        "openai": {"model": "anthropic/claude-haiku-4-5"}
+                        "openai": {"model": "local/qwen/qwen3.5-4b"}
                     },
                 }
             }
@@ -168,7 +168,7 @@ class TestResolveSessionConfig:
                 "defaults": {
                     "interfaceDefaults": {
                         "openai": {
-                            "model": "anthropic/claude-haiku-4-5",
+                            "model": "local/qwen/qwen3.5-4b",
                             "budget": {"sessionBudgetUsd": 2.0},
                         }
                     }
@@ -176,7 +176,7 @@ class TestResolveSessionConfig:
             }
         }
         policy = resolve_session_config(config, "agent:main:openai:e5b7e8f1-uuid")
-        assert policy.model == "anthropic/claude-haiku-4-5"
+        assert policy.model == "local/qwen/qwen3.5-4b"
         assert policy.session_budget_usd == 2.0
 
     def test_unknown_session_key_uses_global_defaults(self):

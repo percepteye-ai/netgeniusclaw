@@ -1,7 +1,19 @@
-"""Model-aware token cost calculator for NetClaw.
+"""Model-aware token cost calculator.
 
-Supports Opus 4.6, Sonnet 4.6, and Haiku 4.5 pricing with prompt caching
-discounts and optional environment variable overrides.
+A SELF-HOSTED model has no per-token vendor price, so the default is zero and
+that is the honest answer rather than a placeholder. The point of this module
+is not to invent a number; it is to apply one you declare.
+
+Declare real prices when you are billed per token — a hosted OpenAI-compatible
+endpoint, say — through ``NETCLAW_TOKEN_PRICING_OVERRIDE``:
+
+    NETCLAW_TOKEN_PRICING_OVERRIDE='{"qwen/qwen3.5-4b": {"input": 0.1, "output": 0.4}}'
+
+An earlier version shipped a hosted vendor's price list and, for any model not
+on it, silently billed at that vendor's flagship rate. Running a 4B model on
+your own GPU it reported dollars per million tokens that were not being spent,
+and there was nothing in the output to say the number was fictional. A wrong
+number that looks authoritative is worse than a zero that is true.
 """
 
 from __future__ import annotations
@@ -18,51 +30,51 @@ logger = logging.getLogger("netclaw_tokens.cost_calculator")
 # ---------------------------------------------------------------------------
 # Default pricing (per 1M tokens, USD)
 # ---------------------------------------------------------------------------
+#: The name a model gets when nothing has been declared for it. Zero, because
+#: a model you serve yourself costs no dollars per token — the GPU is a fixed
+#: cost the meter never sees.
+SELF_HOSTED = "self-hosted"
+
 DEFAULT_PRICING: Dict[str, ModelPricing] = {
-    "claude-opus-4-6": ModelPricing(
-        model_name="claude-opus-4-6",
-        input_price_per_1m=5.00,
-        output_price_per_1m=25.00,
-        cache_discount_pct=90.0,
-    ),
-    "claude-sonnet-4-6": ModelPricing(
-        model_name="claude-sonnet-4-6",
-        input_price_per_1m=3.00,
-        output_price_per_1m=15.00,
-        cache_discount_pct=90.0,
-    ),
-    "claude-haiku-4-5": ModelPricing(
-        model_name="claude-haiku-4-5",
-        input_price_per_1m=1.00,
-        output_price_per_1m=5.00,
-        cache_discount_pct=90.0,
+    SELF_HOSTED: ModelPricing(
+        model_name=SELF_HOSTED,
+        input_price_per_1m=0.0,
+        output_price_per_1m=0.0,
+        # Prefix caching in vLLM or SGLang saves LATENCY, not money. A billing
+        # discount here would be inventing a refund on a bill nobody sends.
+        cache_discount_pct=0.0,
     ),
 }
 
-# Aliases for common model name variations
-MODEL_ALIASES: Dict[str, str] = {
-    "opus": "claude-opus-4-6",
-    "sonnet": "claude-sonnet-4-6",
-    "haiku": "claude-haiku-4-5",
-    "claude-opus-4-6": "claude-opus-4-6",
-    "claude-sonnet-4-6": "claude-sonnet-4-6",
-    "claude-haiku-4-5": "claude-haiku-4-5",
-    "anthropic/claude-opus-4-6": "claude-opus-4-6",
-    "anthropic/claude-sonnet-4-6": "claude-sonnet-4-6",
-    "anthropic/claude-haiku-4-5": "claude-haiku-4-5",
-}
+#: Provider prefixes stripped before lookup, so a declared price for
+#: ``qwen/qwen3.5-4b`` is found whether the caller says that, ``local/qwen/…``
+#: or ``lmstudio/qwen/…``. Nothing is aliased to a different model.
+PROVIDER_PREFIXES: tuple[str, ...] = ("local/", "vllm/", "lmstudio/", "sglang/", "openai/")
+
+MODEL_ALIASES: Dict[str, str] = {}
 
 
 def _resolve_model(model: str) -> str:
-    """Resolve a model name (or alias) to a canonical model identifier."""
-    return MODEL_ALIASES.get(model.lower(), model.lower())
+    """Canonical identifier for a model reference.
+
+    Strips a provider prefix so the same model priced once is found however it
+    is referenced. An empty reference resolves to ``self-hosted``.
+    """
+    m = (model or "").lower().strip()
+    if not m:
+        return SELF_HOSTED
+    for prefix in PROVIDER_PREFIXES:
+        if m.startswith(prefix):
+            m = m[len(prefix):]
+            break
+    return MODEL_ALIASES.get(m, m)
 
 
 def _load_pricing_overrides() -> Dict[str, ModelPricing]:
     """Load pricing overrides from NETCLAW_TOKEN_PRICING_OVERRIDE env var.
 
     Expected format: JSON string like:
-      {"claude-opus-4-6": {"input": 6.0, "output": 30.0}}
+      {"qwen/qwen3.5-4b": {"input": 0.1, "output": 0.4}}
     """
     raw = os.environ.get("NETCLAW_TOKEN_PRICING_OVERRIDE", "")
     if not raw:
@@ -82,18 +94,19 @@ def _load_pricing_overrides() -> Dict[str, ModelPricing]:
         base = DEFAULT_PRICING.get(canonical)
         overrides[canonical] = ModelPricing(
             model_name=canonical,
-            input_price_per_1m=prices.get("input", base.input_price_per_1m if base else 5.0),
-            output_price_per_1m=prices.get("output", base.output_price_per_1m if base else 25.0),
-            cache_discount_pct=prices.get("cache_discount", base.cache_discount_pct if base else 90.0),
+            input_price_per_1m=prices.get("input", base.input_price_per_1m if base else 0.0),
+            output_price_per_1m=prices.get("output", base.output_price_per_1m if base else 0.0),
+            cache_discount_pct=prices.get("cache_discount", base.cache_discount_pct if base else 0.0),
         )
 
     return overrides
 
 
-def get_pricing(model: str = "claude-opus-4-6") -> ModelPricing:
+def get_pricing(model: str = "") -> ModelPricing:
     """Return pricing for the given model, with env var override support.
 
-    Falls back to Opus pricing if the model is unknown.
+    An undeclared model costs ZERO, which is the truth for a model you serve
+    yourself. It is never billed at some other model's rate.
     """
     canonical = _resolve_model(model)
 
@@ -106,15 +119,21 @@ def get_pricing(model: str = "claude-opus-4-6") -> ModelPricing:
     if canonical in DEFAULT_PRICING:
         return DEFAULT_PRICING[canonical]
 
-    # Unknown model — use Opus pricing as fallback and warn
-    logger.warning("Unknown model '%s'; using Opus pricing as fallback", model)
-    return DEFAULT_PRICING["claude-opus-4-6"]
+    # Nothing declared. Zero is correct for a self-hosted model; if this one is
+    # billed per token, declare it rather than have a number invented for it.
+    if canonical != SELF_HOSTED:
+        logger.debug(
+            "No pricing declared for '%s'; reporting zero cost. Set "
+            "NETCLAW_TOKEN_PRICING_OVERRIDE if this endpoint bills per token.",
+            model,
+        )
+    return DEFAULT_PRICING[SELF_HOSTED]
 
 
 def calculate_cost(
     input_tokens: int,
     output_tokens: int,
-    model: str = "claude-opus-4-6",
+    model: str = "",
     cache_creation_tokens: int = 0,
     cache_read_tokens: int = 0,
 ) -> CostEstimate:

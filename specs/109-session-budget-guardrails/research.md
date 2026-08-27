@@ -26,7 +26,7 @@ enforcement for the alert agent:
 
 - `netclaw_investigation_budget_trips_total{budget="hourly"}` — tracks cap hits
 - `netclaw_investigation_budget_trips_total{budget="concurrent"}` — concurrency gate
-- Alert agent config forces `claude-haiku-4-5` model
+- Alert agent config forces `qwen/qwen3.5-4b` model
 - Alert agent has a restricted tool allowlist
 
 This pattern is correct and proven. It just wasn't extended to conversational
@@ -87,7 +87,7 @@ A mobile-default of Haiku + a $2 session cap would have limited this incident to
 ## R6: Industry Patterns
 
 - **OpenAI API usage caps**: Hard monthly limits, no per-session granularity
-- **Anthropic API**: Rate limits but no cost caps (that's the client's job)
+- **the model endpoint**: Rate limits but no cost caps (that's the client's job)
 - **LangChain callbacks**: `max_iterations` on agent loops, `max_execution_time`
 - **AutoGPT budget**: `--budget` flag that halts at a dollar amount
 - **OpenClaw alert-receiver**: Hourly + concurrent caps (already in this codebase)

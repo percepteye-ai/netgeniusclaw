@@ -4,21 +4,21 @@
 **Created**: 2026-06-26
 **Revised**: 2026-06-26
 **Status**: Draft
-**Input**: "Voice is a universal input channel to Claude. Claude already has access to ALL 40+ MCPs and 100+ skills. Voice just provides speech-to-text input and text-to-speech output. Anything NetGeniusClaw can do via CLI should be accessible over the phone - IP Fabric, Forward Networks, Itential, ServiceNow, mind maps, diagrams, EVERYTHING."
+**Input**: "Voice is a universal input channel to the agent. the agent already has access to ALL 40+ MCPs and 100+ skills. Voice just provides speech-to-text input and text-to-speech output. Anything NetGeniusClaw can do via CLI should be accessible over the phone - IP Fabric, Forward Networks, Itential, ServiceNow, mind maps, diagrams, EVERYTHING."
 
 ## Overview
 
-Voice integration is NOT about creating voice-specific handlers for each MCP. It's about providing **voice as an alternative input/output channel** to Claude, who already has access to ALL NetGeniusClaw capabilities:
+Voice integration is NOT about creating voice-specific handlers for each MCP. It's about providing **voice as an alternative input/output channel** to the agent, who already has access to ALL NetGeniusClaw capabilities:
 
 - **40+ MCP Servers**: pyATS, CML, GNS3, PagerDuty, RFC, Memory, Twitter, IP Fabric, Forward Networks, Itential, ServiceNow, SuzieQ, Datadog, GitLab, Jenkins, Atlassian, Blender, Check Point, Prisma SD-WAN, Aruba CX, and more
 - **100+ Skills**: Network health, lab management, diagram generation, ticket creation, compliance checks, and everything else
 
 The architecture is simple:
 ```
-Phone Call → Twilio STT → Claude (ALL MCPs + Skills) → Speech Formatter → Twilio TTS
+Phone Call → Twilio STT → the agent (ALL MCPs + Skills) → Speech Formatter → Twilio TTS
 ```
 
-Claude already knows how to use every tool. Voice is just another way to talk to Claude.
+the agent already knows how to use every tool. Voice is just another way to talk to the agent.
 
 ## User Scenarios & Testing
 
@@ -32,14 +32,14 @@ A network engineer calls NetGeniusClaw and asks it to do ANYTHING that NetGenius
 
 **Acceptance Scenarios**:
 
-1. **Given** Claude has access to all MCPs, **When** user says "Check device health on router R1", **Then** Claude uses pyATS MCP and speaks the result.
-2. **Given** Claude has access to all MCPs, **When** user says "Open a ServiceNow ticket for the BGP issue", **Then** Claude uses ServiceNow MCP and confirms ticket creation.
-3. **Given** Claude has access to all MCPs, **When** user says "Show me the path from site A to site B in Forward Networks", **Then** Claude uses Forward Networks MCP and describes the path.
-4. **Given** Claude has access to all MCPs, **When** user says "Create a network mind map in Blender", **Then** Claude uses Blender MCP and confirms diagram creation.
-5. **Given** Claude has access to all MCPs, **When** user says "Run the compliance check in IP Fabric", **Then** Claude uses IP Fabric MCP and speaks the results.
-6. **Given** Claude has access to all MCPs, **When** user says "Trigger the Itential workflow for provisioning", **Then** Claude uses Itential MCP and reports status.
-7. **Given** Claude has access to all MCPs, **When** user says "Check Datadog for any alerts", **Then** Claude uses Datadog MCP and speaks alert summary.
-8. **Given** Claude has access to all MCPs, **When** user says "What's in my GitLab merge requests?", **Then** Claude uses GitLab MCP and lists MRs.
+1. **Given** the agent has access to all MCPs, **When** user says "Check device health on router R1", **Then** the agent uses pyATS MCP and speaks the result.
+2. **Given** the agent has access to all MCPs, **When** user says "Open a ServiceNow ticket for the BGP issue", **Then** the agent uses ServiceNow MCP and confirms ticket creation.
+3. **Given** the agent has access to all MCPs, **When** user says "Show me the path from site A to site B in Forward Networks", **Then** the agent uses Forward Networks MCP and describes the path.
+4. **Given** the agent has access to all MCPs, **When** user says "Create a network mind map in Blender", **Then** the agent uses Blender MCP and confirms diagram creation.
+5. **Given** the agent has access to all MCPs, **When** user says "Run the compliance check in IP Fabric", **Then** the agent uses IP Fabric MCP and speaks the results.
+6. **Given** the agent has access to all MCPs, **When** user says "Trigger the Itential workflow for provisioning", **Then** the agent uses Itential MCP and reports status.
+7. **Given** the agent has access to all MCPs, **When** user says "Check Datadog for any alerts", **Then** the agent uses Datadog MCP and speaks alert summary.
+8. **Given** the agent has access to all MCPs, **When** user says "What's in my GitLab merge requests?", **Then** the agent uses GitLab MCP and lists MRs.
 
 ---
 
@@ -53,8 +53,8 @@ User calls NetGeniusClaw, discusses a topic, hangs up, calls back later, and Net
 
 **Acceptance Scenarios**:
 
-1. **Given** user previously discussed router R1, **When** they call back and say "What about its BGP neighbors?", **Then** Claude recalls R1 from context and queries BGP.
-2. **Given** user stored a fact via voice, **When** they call back days later and ask about it, **Then** Claude recalls the fact from Memory MCP.
+1. **Given** user previously discussed router R1, **When** they call back and say "What about its BGP neighbors?", **Then** the agent recalls R1 from context and queries BGP.
+2. **Given** user stored a fact via voice, **When** they call back days later and ask about it, **Then** the agent recalls the fact from Memory MCP.
 3. **Given** context is stored per caller ID, **When** a different number calls, **Then** they get fresh context (no cross-contamination).
 
 ---
@@ -70,8 +70,8 @@ NetGeniusClaw calls the engineer when critical events occur, rather than waiting
 **Acceptance Scenarios**:
 
 1. **Given** alert triggers are configured, **When** PagerDuty P1 incident fires, **Then** NetGeniusClaw calls the configured number and speaks incident details.
-2. **Given** the call is answered, **When** engineer asks follow-up questions, **Then** Claude can use any MCP to investigate further.
-3. **Given** engineer says "Acknowledge that incident", **Then** Claude uses PagerDuty MCP to acknowledge.
+2. **Given** the call is answered, **When** engineer asks follow-up questions, **Then** the agent can use any MCP to investigate further.
+3. **Given** engineer says "Acknowledge that incident", **Then** the agent uses PagerDuty MCP to acknowledge.
 
 ---
 
@@ -88,7 +88,7 @@ All responses are formatted for natural speech - no UUIDs read aloud, IPs spoken
 1. **Given** a response contains IP "10.0.0.1", **When** spoken, **Then** it sounds like "10 dot 0 dot 0 dot 1".
 2. **Given** a response contains a UUID, **When** spoken, **Then** it's either omitted or abbreviated "identifier ending in A-B-C".
 3. **Given** a response has 50 items, **When** spoken, **Then** it summarizes "50 items found, here are the top 5..."
-4. **Given** sensitive data (credentials), **When** requested, **Then** Claude refuses to speak it aloud.
+4. **Given** sensitive data (credentials), **When** requested, **Then** the agent refuses to speak it aloud.
 
 ---
 
@@ -109,8 +109,8 @@ All responses are formatted for natural speech - no UUIDs read aloud, IPs spoken
 
 - **FR-001**: System MUST accept inbound voice calls via Twilio
 - **FR-002**: System MUST transcribe speech to text using Twilio/Whisper
-- **FR-003**: System MUST pass transcribed text to Claude with access to ALL registered MCPs
-- **FR-004**: System MUST format Claude's response for natural speech
+- **FR-003**: System MUST pass transcribed text to the agent with access to ALL registered MCPs
+- **FR-004**: System MUST format the agent's response for natural speech
 - **FR-005**: System MUST convert formatted response to speech via Twilio TTS
 - **FR-006**: System MUST maintain conversation context per caller ID via Memory MCP
 - **FR-007**: System MUST support proactive outbound calls for configured alert triggers
@@ -146,14 +146,14 @@ All responses are formatted for natural speech - no UUIDs read aloud, IPs spoken
 - Q: How should outbound call recipients authenticate? → A: No authentication - speak immediately
 - Q: Should conversation context persist across calls? → A: Yes, per caller ID via Memory MCP
 - Q: What is the maximum call duration? → A: 30 minutes (warn at 25, disconnect at 30)
-- Q: Should voice have specific handlers per MCP? → A: NO - Claude already has all tools, voice is just I/O
+- Q: Should voice have specific handlers per MCP? → A: NO - the agent already has all tools, voice is just I/O
 
 ## Assumptions
 
 - Twilio Voice MCP (Feature 042) is deployed and functional
-- All 40+ MCPs are registered and accessible to Claude
+- All 40+ MCPs are registered and accessible to the agent
 - Caller whitelist is configured in ~/.openclaw/voice/whitelist.json
 - Memory MCP available for context persistence
 - Twilio account has sufficient credits for voice calls
-- Claude is available with tool calling capabilities
+- the agent is available with tool calling capabilities
 - Sensitive credentials are stored securely and never spoken aloud

@@ -3,7 +3,7 @@
 > **Audit trail recorded per Constitution Principle IV (Immutable Audit Trail).**
 >
 > The `gait-session-tracking` skill normally records turns live against the
-> `gait_mcp` server during NetGeniusClaw agent execution. This build ran in a Claude
+> `gait_mcp` server during NetGeniusClaw agent execution. This build ran in a the agent
 > Code shell where `gait_mcp` is not registered, so no turns were recorded live.
 > This document is the trail assembled from the session transcript and the
 > working tree on branch `069-halo-mcp-server`, in the spirit Principle IV

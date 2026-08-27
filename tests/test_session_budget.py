@@ -227,7 +227,7 @@ class TestContextWarning:
 
     def test_context_warning_message_includes_cost(self):
         ledger = SessionLedger()
-        msg = ledger.get_context_warning(200_000, model="claude-sonnet-4-6")
+        msg = ledger.get_context_warning(200_000, model="qwen/qwen3.5-4b")
         assert "200,000 tokens" in msg
         assert "$" in msg  # Should include cost estimate
 

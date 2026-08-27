@@ -65,7 +65,7 @@
 
 **Created/Modified**
 
-- `C:\Users\bstory\.claude\plans\r-openapi-json-read-all-of-shimmying-lamport.md` — final approved plan.
+- `C:\Users\bstory\.agent\plans\r-openapi-json-read-all-of-shimmying-lamport.md` — final approved plan.
 
 **Commit:** none (plan-mode only)
 

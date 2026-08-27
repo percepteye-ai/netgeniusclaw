@@ -4,16 +4,16 @@
 
 ## Summary
 
-Voice is a **universal I/O channel** to Claude, who already has access to ALL 40+ MCPs and 100+ skills. We're not building voice handlers for each MCP - we're building a voice interface that passes speech to Claude and speaks the response.
+Voice is a **universal I/O channel** to the agent, who already has access to ALL 40+ MCPs and 100+ skills. We're not building voice handlers for each MCP - we're building a voice interface that passes speech to the agent and speaks the response.
 
 ```
-Phone → Twilio STT → Claude (ALL tools) → Speech Formatter → Twilio TTS → Phone
+Phone → Twilio STT → the agent (ALL tools) → Speech Formatter → Twilio TTS → Phone
 ```
 
 ## Technical Context
 
 **Language/Version**: Python 3.10+ (webhook server)
-**Primary Dependencies**: FastMCP, Twilio SDK, Anthropic SDK, httpx
+**Primary Dependencies**: FastMCP, Twilio SDK, the model provider SDK, httpx
 **Storage**: Memory MCP (conversation context per caller ID)
 **Target Platform**: Linux server + Twilio cloud
 **Project Type**: Webhook service extension
@@ -35,13 +35,13 @@ Phone → Twilio STT → Claude (ALL tools) → Speech Formatter → Twilio TTS 
 - ❌ Voice handler for IP Fabric
 - ❌ Voice handler for [any other MCP]
 
-Claude already has all these tools. We just connect voice I/O to Claude.
+the agent already has all these tools. We just connect voice I/O to the agent.
 
 ## Project Structure
 
 ```text
 mcp-servers/twilio-voice-mcp/
-├── webhook_server.py      # EXTEND: Add universal voice → Claude → voice flow
+├── webhook_server.py      # EXTEND: Add universal voice → the agent → voice flow
 ├── speech_formatter.py    # NEW: Format any response for speech
 ├── context_manager.py     # NEW: Per-caller context via Memory MCP
 └── alert_triggers.py      # NEW: Proactive outbound call config
@@ -53,10 +53,10 @@ mcp-servers/twilio-voice-mcp/
 
 ## Key Design Decisions
 
-1. **Universal tool access**: Claude receives transcribed speech and decides which tools to use
+1. **Universal tool access**: the agent receives transcribed speech and decides which tools to use
 2. **Generic speech formatting**: Formatter handles ANY MCP response, not just known formats
 3. **Context via Memory MCP**: Conversation state stored per caller ID
-4. **No per-MCP skills needed**: Claude already knows all tools
+4. **No per-MCP skills needed**: the agent already knows all tools
 
 ## Constitution Check
 

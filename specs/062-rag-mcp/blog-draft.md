@@ -1,6 +1,6 @@
 # Teaching NetGeniusClaw to Read: An Offline, Agentic RAG Knowledge Base
 
-*Draft for WordPress — by John Capobianco & Claude (NetGeniusClaw milestone, Feature 062). Present to John for review before publishing (Constitution XVII).*
+*Draft for WordPress — by John Capobianco & the agent (NetGeniusClaw milestone, Feature 062). Present to John for review before publishing (Constitution XVII).*
 
 ---
 

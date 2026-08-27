@@ -5,18 +5,18 @@
 
 ## Research Tasks
 
-### 1. Anthropic count_tokens API
+### 1. the model provider count_tokens API
 
-**Decision**: Use `anthropic.Anthropic().messages.count_tokens()` from the official `anthropic` Python SDK.
+**Decision**: Use `model-provider.the model provider().messages.count_tokens()` from the official `model-provider` Python SDK.
 
-**Rationale**: This is the official, supported method for exact token counting. It uses the same tokenizer as the billing system, ensuring counts match actual usage within 5% (SC-004). The SDK is already a dependency since NetGeniusClaw uses Claude as its AI runtime.
+**Rationale**: This is the official, supported method for exact token counting. It uses the same tokenizer as the billing system, ensuring counts match actual usage within 5% (SC-004). The SDK is already a dependency since NetGeniusClaw uses the agent as its AI runtime.
 
 **Alternatives considered**:
-- `tiktoken` (OpenAI tokenizer): Wrong tokenizer for Claude models; would produce inaccurate counts.
+- `tiktoken` (OpenAI tokenizer): Wrong tokenizer for the agent models; would produce inaccurate counts.
 - Manual `len(text) / 4` estimation: Too imprecise for cost tracking; used only as fallback when API unavailable.
-- Third-party token counting libraries: No official support for Claude's tokenizer outside Anthropic's SDK.
+- Third-party token counting libraries: No official support for the agent's tokenizer outside the model provider's SDK.
 
-**Fallback strategy**: When the Anthropic API is unreachable or rate-limited, fall back to `len(text) / 4` approximation and mark the count with `estimated: true`. This ensures the system never fails due to token counting issues (FR-014).
+**Fallback strategy**: When the the model endpoint is unreachable or rate-limited, fall back to `len(text) / 4` approximation and mark the count with `estimated: true`. This ensures the system never fails due to token counting issues (FR-014).
 
 ### 2. TOON Format Serialization
 
@@ -25,7 +25,7 @@
 **Rationale**: TOON (Tabular Object Oriented Notation) is specifically designed to reduce token consumption for LLM interactions. It achieves 40-60% savings on tabular data (which is the majority of network data: route tables, interface lists, BGP peers) by using CSV-style array encoding instead of repeated JSON key-value pairs.
 
 **Alternatives considered**:
-- MessagePack/CBOR: Binary formats; not human-readable, Claude cannot reason about them.
+- MessagePack/CBOR: Binary formats; not human-readable, the agent cannot reason about them.
 - YAML: Saves some tokens over JSON but not as much as TOON for tabular data.
 - Custom CSV encoding: Would require a custom parser; TOON is standardized.
 - Protocol Buffers: Binary format; not suitable for LLM context.
@@ -36,7 +36,7 @@
 
 **Decision**: Hardcoded pricing dictionary with environment variable override via `NETCLAW_TOKEN_PRICING_OVERRIDE`.
 
-**Rationale**: Anthropic's pricing changes infrequently. Hardcoding with an override mechanism provides zero-config operation while allowing quick updates without code changes.
+**Rationale**: the model provider's pricing changes infrequently. Hardcoding with an override mechanism provides zero-config operation while allowing quick updates without code changes.
 
 **Pricing (per 1M tokens)**:
 | Model | Input | Output |
@@ -45,7 +45,7 @@
 | Sonnet 4.6 | $3.00 | $15.00 |
 | Haiku 4.5 | $1.00 | $5.00 |
 
-**Prompt caching**: 90% discount on cached input tokens (Anthropic standard).
+**Prompt caching**: 90% discount on cached input tokens (the model provider standard).
 
 ### 4. Thread Safety for Session Ledger
 

@@ -32,7 +32,7 @@
 ## Validation Notes
 
 **Validation Date**: 2026-06-20
-**Validator**: Claude (Spec Generation)
+**Validator**: the agent (Spec Generation)
 
 ### Items Verified
 

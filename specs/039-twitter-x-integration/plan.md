@@ -180,7 +180,7 @@ Heartbeat Trigger (4-hour interval)
          ▼
 ┌─────────────────────┐
 │ Generate Content    │ (CCIE persona, technical accuracy)
-│ via Claude          │
+│ via the agent          │
 └─────────┬───────────┘
          │
          ▼

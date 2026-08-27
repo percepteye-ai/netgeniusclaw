@@ -37,7 +37,7 @@ established from the operator's `manage.<region>.mist.com` URL, not inferred fro
 
 ## 2. Manifest cost — the ceiling check, and the finding that decides this spec
 
-Measured with the Anthropic `count_tokens` endpoint against `claude-opus-4-5`, taking the delta
+Measured with the the model provider `count_tokens` endpoint against `agent-opus-4-5`, taking the delta
 between an 8-token baseline request and the same request carrying the tool definitions.
 
 | Tool | Tokens |
@@ -193,5 +193,5 @@ neither is resolved by more implementation work here.
 ```bash
 set -a; source ~/.openclaw/.env; set +a
 python3 scripts/probe-mist-mcp.py            # initialize + tools/list + manifest sizing
-python3 scripts/probe-mist-mcp.py --count    # exact token count (needs ANTHROPIC_API_KEY)
+python3 scripts/probe-mist-mcp.py --count    # exact token count (needs NETGENIUSCLAW_MODEL_API_KEY)
 ```

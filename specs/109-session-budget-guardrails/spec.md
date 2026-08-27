@@ -3,7 +3,7 @@
 **Feature Branch**: `109-session-budget-guardrails`
 **Created**: 2026-08-14
 **Status**: Draft
-**Input**: Live operational incident — a 7-question conversational session from a mobile (iPhone/N2N) interface generated 59 assistant turns, 82 tool calls, ~3M input tokens, and $11.13 USD in API costs over 2 hours using claude-sonnet-5 with `thinkingLevel: high`. The existing `netclaw_tokens` library tracks and displays costs (observability-only) but never enforces any ceiling. The alert agent has budget guardrails (hourly caps, concurrency limits, cheap model default) but the main agent — which handles all conversational/N2N/phone sessions — has zero cost controls.
+**Input**: Live operational incident — a 7-question conversational session from a mobile (iPhone/N2N) interface generated 59 assistant turns, 82 tool calls, ~3M input tokens, and $11.13 USD in API costs over 2 hours using qwen/qwen3.5-4b with `thinkingLevel: high`. The existing `netclaw_tokens` library tracks and displays costs (observability-only) but never enforces any ceiling. The alert agent has budget guardrails (hourly caps, concurrency limits, cheap model default) but the main agent — which handles all conversational/N2N/phone sessions — has zero cost controls.
 
 ## Problem Statement
 
@@ -20,7 +20,7 @@ What it does NOT provide:
 - **Tool-call depth limits** — an agentic chain can run unlimited tool calls per user message
 - **Context growth control** — tool results accumulate in context forever, causing input tokens to balloon quadratically across turns
 
-The alert agent (`agents.list[1]`) demonstrates the correct pattern: it uses `claude-haiku-4-5`, has a restricted tool allowlist, and the alert-receiver enforces hourly/concurrent budget caps via `netclaw_investigation_budget_trips_total`. This feature extends that pattern to ALL agent sessions.
+The alert agent (`agents.list[1]`) demonstrates the correct pattern: it uses `qwen/qwen3.5-4b`, has a restricted tool allowlist, and the alert-receiver enforces hourly/concurrent budget caps via `netclaw_investigation_budget_trips_total`. This feature extends that pattern to ALL agent sessions.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -68,7 +68,7 @@ As a NetGeniusClaw operator, I want different model defaults based on the sessio
 
 **Acceptance Scenarios**:
 
-1. **Given** `interface_defaults.mobile.model: "anthropic/claude-haiku-4-5"` configured, **When** a session arrives via the OpenAI-compat gateway (N2N/mobile), **Then** it uses Haiku unless the user explicitly requests a different model.
+1. **Given** `interface_defaults.mobile.model: "local/qwen/qwen3.5-4b"` configured, **When** a session arrives via the OpenAI-compat gateway (N2N/mobile), **Then** it uses Haiku unless the user explicitly requests a different model.
 2. **Given** a mobile session using Haiku, **When** the user says "use sonnet for this" or equivalent escalation command, **Then** the model upgrades for that session only.
 3. **Given** a TUI/desktop session, **When** no interface default is configured for that interface, **Then** it falls back to the agent's `model.primary` setting (existing behavior, no regression).
 4. **Given** an explicit model override in the message, **Then** it always takes precedence over interface defaults.

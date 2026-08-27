@@ -59,7 +59,7 @@ The server communicates via stdio. It will wait for JSON-RPC messages on stdin.
 
 ## Usage Examples
 
-Once registered with an MCP client (Claude Desktop, OpenClaw, etc.):
+Once registered with an MCP client (the agent Desktop, OpenClaw, etc.):
 
 - "Show me all BGP peers across the network"
 - "What did the routing table look like yesterday at 2pm?"

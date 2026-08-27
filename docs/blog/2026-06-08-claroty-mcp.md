@@ -1,7 +1,7 @@
 ---
 title: "Claroty xDome joins NetGeniusClaw — OT visibility lands as MCP #74"
 date: 2026-06-08
-authors: [John, Claude]
+authors: [John, the agent]
 status: draft
 target: WordPress MCP (not configured locally — publish manually)
 spec: specs/035-claroty-mcp/

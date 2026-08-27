@@ -21,7 +21,7 @@ clarified spec into a design.
   043 (Twilio voice)'s `webhook_server.py` looks like a template for "external channel → agent
   → response" but its primary path POSTs to a `/v1/chat/completions` REST route OpenClaw's
   gateway (2026.6+) no longer exposes (`gateway.py:1-11` states this explicitly) — it silently
-  falls through to a degraded direct-Anthropic-API fallback with only 7 hardcoded tools. **Do
+  falls through to a degraded direct-the model provider-API fallback with only 7 hardcoded tools. **Do
   not use 043 as the template.** `chat.py`'s `_ask_gateway`/`run_agent_turn` pattern is the
   current, correct one (post-dates 043's REST assumption).
 

@@ -2,7 +2,7 @@
 
 **Draft for review — not published.** Constitution Principle XVII requires John's sign-off first.
 
-*By John Capobianco and Claude · 2026-08-14*
+*By John Capobianco and the agent · 2026-08-14*
 
 John handed over a brief with seven independent polish items for NetGeniusClaw Mobile 1.0.1 — dark mode, real
 haptics, selectable/shareable chat answers, Time Sensitive approval notifications, a Face ID app lock,

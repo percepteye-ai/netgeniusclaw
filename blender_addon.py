@@ -27,7 +27,7 @@ bl_info = {
     "version": (1, 2),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > BlenderMCP",
-    "description": "Connect Blender to Claude via MCP",
+    "description": "Connect Blender to the agent via MCP",
     "category": "Interface",
 }
 
@@ -1168,7 +1168,7 @@ class BlenderMCPServer:
                 "message": """PolyHaven integration is currently disabled. To enable it:
                             1. In the 3D Viewport, find the BlenderMCP panel in the sidebar (press N if hidden)
                             2. Check the 'Use assets from Poly Haven' checkbox
-                            3. Restart the connection to Claude"""
+                            3. Restart the connection to the agent"""
         }
 
     #region Hyper3D
@@ -1183,7 +1183,7 @@ class BlenderMCPServer:
                                 1. In the 3D Viewport, find the BlenderMCP panel in the sidebar (press N if hidden)
                                 2. Keep the 'Use Hyper3D Rodin 3D model generation' checkbox checked
                                 3. Choose the right plaform and fill in the API Key
-                                4. Restart the connection to Claude"""
+                                4. Restart the connection to the agent"""
                 }
             mode = bpy.context.scene.blendermcp_hyper3d_mode
             message = f"Hyper3D Rodin integration is enabled and ready to use. Mode: {mode}. " + \
@@ -1198,7 +1198,7 @@ class BlenderMCPServer:
                 "message": """Hyper3D Rodin integration is currently disabled. To enable it:
                             1. In the 3D Viewport, find the BlenderMCP panel in the sidebar (press N if hidden)
                             2. Check the 'Use Hyper3D Rodin 3D model generation' checkbox
-                            3. Restart the connection to Claude"""
+                            3. Restart the connection to the agent"""
             }
 
     def create_rodin_job(self, *args, **kwargs):
@@ -1558,7 +1558,7 @@ class BlenderMCPServer:
                             1. In the 3D Viewport, find the BlenderMCP panel in the sidebar (press N if hidden)
                             2. Keep the 'Use Sketchfab' checkbox checked
                             3. Enter your Sketchfab API Key
-                            4. Restart the connection to Claude"""
+                            4. Restart the connection to the agent"""
             }
         else:
             return {
@@ -1567,7 +1567,7 @@ class BlenderMCPServer:
                             1. In the 3D Viewport, find the BlenderMCP panel in the sidebar (press N if hidden)
                             2. Check the 'Use assets from Sketchfab' checkbox
                             3. Enter your Sketchfab API Key
-                            4. Restart the connection to Claude"""
+                            4. Restart the connection to the agent"""
             }
 
     def search_sketchfab_models(self, query, categories=None, count=20, downloadable=True):
@@ -1958,7 +1958,7 @@ class BlenderMCPServer:
                                 1. In the 3D Viewport, find the BlenderMCP panel in the sidebar (press N if hidden)
                                 2. Keep the 'Use Tencent Hunyuan 3D model generation' checkbox checked
                                 3. Choose the right platform and fill in the SecretId and SecretKey
-                                4. Restart the connection to Claude"""
+                                4. Restart the connection to the agent"""
                         }
                 case "LOCAL_API":
                     if not bpy.context.scene.blendermcp_hunyuan3d_api_url:
@@ -1969,7 +1969,7 @@ class BlenderMCPServer:
                                 1. In the 3D Viewport, find the BlenderMCP panel in the sidebar (press N if hidden)
                                 2. Keep the 'Use Tencent Hunyuan 3D model generation' checkbox checked
                                 3. Choose the right platform and fill in the API URL
-                                4. Restart the connection to Claude"""
+                                4. Restart the connection to the agent"""
                         }
                 case _:
                     return {
@@ -1986,7 +1986,7 @@ class BlenderMCPServer:
             "message": """Hunyuan3D integration is currently disabled. To enable it:
                         1. In the 3D Viewport, find the BlenderMCP panel in the sidebar (press N if hidden)
                         2. Check the 'Use Tencent Hunyuan 3D model generation' checkbox
-                        3. Restart the connection to Claude"""
+                        3. Restart the connection to the agent"""
         }
     
     @staticmethod
@@ -2446,8 +2446,8 @@ class BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey(bpy.types.Operator):
 # Operator to start the server
 class BLENDERMCP_OT_StartServer(bpy.types.Operator):
     bl_idname = "blendermcp.start_server"
-    bl_label = "Connect to Claude"
-    bl_description = "Start the BlenderMCP server to connect with Claude"
+    bl_label = "Connect to the agent"
+    bl_description = "Start the BlenderMCP server to connect with the agent"
 
     def execute(self, context):
         scene = context.scene
@@ -2465,8 +2465,8 @@ class BLENDERMCP_OT_StartServer(bpy.types.Operator):
 # Operator to stop the server
 class BLENDERMCP_OT_StopServer(bpy.types.Operator):
     bl_idname = "blendermcp.stop_server"
-    bl_label = "Stop the connection to Claude"
-    bl_description = "Stop the connection to Claude"
+    bl_label = "Stop the connection to the agent"
+    bl_description = "Stop the connection to the agent"
 
     def execute(self, context):
         scene = context.scene

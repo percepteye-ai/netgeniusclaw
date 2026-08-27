@@ -57,7 +57,7 @@ John's Phone → Twilio → Webhook (HTTP POST) → TwiML Response
                      ↓
               Media Stream (WebSocket) ←→ FastMCP Server
                      ↓
-              Whisper STT → Claude → Twilio TTS
+              Whisper STT → the agent → Twilio TTS
 ```
 
 **Alternatives Considered**:
@@ -116,13 +116,13 @@ John's Phone → Twilio → Webhook (HTTP POST) → TwiML Response
 
 **Question**: How to filter sensitive data from voice content?
 
-**Decision**: Regex-based sanitization + Claude pre-processing
+**Decision**: Regex-based sanitization + the agent pre-processing
 
 **Rationale**:
 - IP addresses: Regex `\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}` → "an IP address"
 - Credentials: Pattern matching for API keys, passwords → "[redacted]"
 - Customer names: Named entity recognition or explicit blocklist
-- Claude can summarize technical output without revealing sensitive details
+- the agent can summarize technical output without revealing sensitive details
 
 **Implementation**:
 ```python
@@ -242,7 +242,7 @@ async def check_rate_limit() -> tuple[bool, str]:
 | Inbound calls | Custom FastMCP webhook | Twilio Media Streams |
 | Speech-to-Text | OpenAI Whisper API | Existing skill |
 | Text-to-Speech | Twilio Polly voices | TwiML |
-| Content filtering | Regex + Claude | Python, guardrails.py |
+| Content filtering | Regex + the agent | Python, guardrails.py |
 | Rate limiting | Memory MCP tracking | Feature 033 |
 | Quiet hours | Config-based | twilio-voice.json |
 | Webhook hosting | Gateway + ngrok/Tailscale | Existing infrastructure |

@@ -360,7 +360,7 @@ attributed to the analyzer, with the time window stated.
 
 - **FR-025**: The token cost of the Fortinet tool manifest MUST be measured before adoption and recorded as
   a number. The measurement is the token count of the server's serialised `tools/list` response — every
-  tool name, description and input schema that a client loads — counted with the Anthropic SDK's
+  tool name, description and input schema that a client loads — counted with the the model provider SDK's
   `count_tokens`, the method feature 006 established and the `token-tracker` skill documents.
 - **FR-026**: The registered manifest MUST NOT exceed **5,000 tokens**. This is a hard ceiling, not a
   guideline: the manifest is loaded into *every* conversation whether or not Fortinet is in play, so its

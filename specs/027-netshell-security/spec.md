@@ -99,7 +99,7 @@ As a network administrator, I want to block or allow specific tools so that I ca
 - **FR-007**: DefenseClaw MUST scan all skills, MCPs, and plugins before execution
 - **FR-008**: DefenseClaw MUST auto-block components with HIGH/CRITICAL scan findings
 - **FR-009**: DefenseClaw MUST provide CodeGuard static analysis (credentials, eval, shell, SQL injection, path traversal)
-- **FR-010**: DefenseClaw MUST inspect LLM prompts and completions across Anthropic, OpenAI, Azure, Gemini, OpenRouter, Ollama, and Bedrock
+- **FR-010**: DefenseClaw MUST inspect LLM prompts and completions across the model provider, OpenAI, Azure, Gemini, OpenRouter, Ollama, and Bedrock
 - **FR-011**: DefenseClaw MUST evaluate tool calls against six rule categories: secret, command, sensitive-path, c2, cognitive-file, trust-exploit
 
 #### Enterprise Integration

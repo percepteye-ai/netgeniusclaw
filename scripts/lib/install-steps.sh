@@ -2315,7 +2315,7 @@ log_info "Blender MCP runs via uvx blender-mcp — no local clone required"
 log_info "Prerequisites:"
 log_info "  1. Install Blender on Windows: winget install BlenderFoundation.Blender"
 log_info "  2. Install addon: Download addon.py from GitHub, install via Edit > Preferences > Add-ons"
-log_info "  3. Connect addon: Press 'N' in Blender, find BlenderMCP tab, click 'Connect to Claude'"
+log_info "  3. Connect addon: Press 'N' in Blender, find BlenderMCP tab, click 'Connect to the agent'"
 log_info "  4. Get Windows IP from WSL: cat /etc/resolv.conf | grep nameserver"
 log_info "  5. Set BLENDER_HOST and BLENDER_PORT in .env"
 
@@ -2546,8 +2546,8 @@ if [ -d "$TOKEN_LIB_DIR" ]; then
     log_info "Installing netclaw_tokens dependencies..."
     netclaw_pip_install -r "$TOKEN_LIB_DIR/requirements.txt" || {
             log_warn "netclaw_tokens pip install failed — trying individual packages"
-            netclaw_pip_install anthropic toon-format || \
-                    log_warn "Token optimization deps failed. Install manually: pip3 install anthropic toon-format"
+            netclaw_pip_install model-provider toon-format || \
+                    log_warn "Token optimization deps failed. Install manually: pip3 install model-provider toon-format"
         }
     log_info "netclaw_tokens library ready at $TOKEN_LIB_DIR"
 else
@@ -3043,11 +3043,11 @@ _set_env_var "AAP_MCP_LINT_SCRIPT"       "$AAP_MCP_DIR/ansible-lint.py"
 _set_env_var "AAP_MCP_DOCS_SCRIPT"       "$AAP_MCP_DIR/redhat_docs.py"
 
 # Remind user about API key if not set
-if ! grep -q "^ANTHROPIC_API_KEY=" "$OPENCLAW_ENV" 2>/dev/null && [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+if ! grep -q "^NETGENIUSCLAW_MODEL_API_KEY=" "$OPENCLAW_ENV" 2>/dev/null && [ -z "${NETGENIUSCLAW_MODEL_API_KEY:-}" ]; then
     echo "" >> "$OPENCLAW_ENV"
-    echo "# Uncomment and set your Anthropic API key:" >> "$OPENCLAW_ENV"
-    echo "# ANTHROPIC_API_KEY=sk-ant-your-key-here" >> "$OPENCLAW_ENV"
-    log_warn "ANTHROPIC_API_KEY not set. Add it to $OPENCLAW_ENV or export it in your shell."
+    echo "# Uncomment and set your model endpoint credential:" >> "$OPENCLAW_ENV"
+    echo "# NETGENIUSCLAW_MODEL_API_KEY=sk-ant-your-key-here" >> "$OPENCLAW_ENV"
+    log_warn "NETGENIUSCLAW_MODEL_API_KEY not set. Add it to $OPENCLAW_ENV or export it in your shell."
 fi
 
 log_info "Environment variables written to $OPENCLAW_ENV"

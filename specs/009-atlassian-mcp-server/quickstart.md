@@ -83,7 +83,7 @@ The server communicates via stdio. It will wait for JSON-RPC messages on stdin.
 
 ## Usage Examples
 
-Once registered with an MCP client (Claude Desktop, OpenClaw, etc.):
+Once registered with an MCP client (the agent Desktop, OpenClaw, etc.):
 
 **Jira:**
 - "Show me open issues in project NET assigned to me"

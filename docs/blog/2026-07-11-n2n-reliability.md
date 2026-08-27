@@ -1,7 +1,7 @@
 ---
 title: "Making the mesh hold: N2N federation grows up (async tasks, self-healing, and a CML lab cloned across the internet)"
 date: 2026-07-11
-authors: [John, Claude]
+authors: [John, the agent]
 status: draft
 target: WordPress MCP (present to John for review before publishing — Constitution XVII)
 spec: specs/053-n2n-ergonomics/
@@ -108,4 +108,4 @@ Next: an internal-clutch model (**iN2N**) for focused single-operator claw fleet
 
 ---
 
-*Written by John and Claude, with debugging and a sharp `--session-id` catch from Nick, and a client-payload PR from Byrn. Spec 053, built spec-through-implement over a live three-claw mesh across three operators, three machines, and three models.*
+*Written by John and the agent, with debugging and a sharp `--session-id` catch from Nick, and a client-payload PR from Byrn. Spec 053, built spec-through-implement over a live three-claw mesh across three operators, three machines, and three models.*

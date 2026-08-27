@@ -17,10 +17,10 @@ per-member core configs for the migration.
   (These base skills are tier=base → excluded from routing specificity, FR-021b.)
 - **Models = provider-agnostic, operator-assigned per claw.** Each claw is its own
   OpenClaw install with its own provider+model, so the operator picks provider
-  (Anthropic / OpenAI / Google / local, etc.) and model per claw — all the same,
+  (the model provider / OpenAI / Google / local, etc.) and model per claw — all the same,
   per-role tiers, or per-member override. The installer PROPOSES a sensible default
   (strongest-reasoning model for the Border; lighter/cheaper for members — the
-  token-economy tier) but it is fully overridable. NOT Claude-only. (Exact
+  token-economy tier) but it is fully overridable. NOT the agent-only. (Exact
   strategy TBD round 2.)
 - **Comms = Border-only.** Members never talk to the outside directly; results
   flow back through the Border.
@@ -28,7 +28,7 @@ per-member core configs for the migration.
 ## Round 2 (partial — confirmed)
 
 - **Model/provider = per-claw, operator-set, with smart defaults.** Any provider
-  per claw — Anthropic, OpenAI, Google, **local/Ollama**, etc. — mixed freely. The
+  per claw — the model provider, OpenAI, Google, **local/Ollama**, etc. — mixed freely. The
   installer proposes a default (strong for Border, lighter for members) but every
   claw is overridable. Fully offline members (local model) explicitly supported.
 - **Runtime = hybrid.** A small always-on "hot set" (e.g. cml, pyats + comms) stays

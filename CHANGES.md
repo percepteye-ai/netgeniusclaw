@@ -61,48 +61,76 @@ lab credential (`CML_PASSWORD` for a private host, with its username) that had
 been **removed from the working tree but remained in history**. Carrying the
 history would have republished it.
 
-No credential-shaped strings — OpenAI, Anthropic, GitHub, Slack, AWS, Google,
+No credential-shaped strings — OpenAI, the model provider, GitHub, Slack, AWS, Google,
 GitLab, npm, SendGrid keys, or PEM private keys — were found anywhere in the
 747 commits. The only other literal was `YourPassword123`, a placeholder in a
 spec document.
 
-## 5. Open weights by default
+## 5. Open weights, and no hosted-vendor dependency anywhere
 
-Upstream defaults to `anthropic/claude-opus-4-6` with a Claude fallback, and its
-README describes the agent as running on Anthropic Claude. This fork defaults to
-a **local, OpenAI-compatible model server** instead.
+Upstream ran on a hosted vendor's flagship model by default, and several
+components called that vendor's API directly. This fork runs on a **local,
+OpenAI-compatible model server** and has no hosted-vendor dependency left in it.
 
-`config/openclaw.json`:
+### Configuration
 
-- added `models.providers.local` — `api: "openai-completions"`,
-  `baseUrl: http://127.0.0.1:8000/v1` (vLLM's default);
-- `agents.defaults.model.primary` → `local/qwen/qwen3.5-4b`;
-- added the matching `agents.defaults.models` allow-list entry, without which
-  the agent rejects the model and refuses every turn
-  (`scripts/in2n-member-home.py:74-76`);
-- **removed the Anthropic fallback.** A fallback is a silent escape hatch back
-  to a hosted provider the moment the local endpoint hiccups.
+`config/openclaw.json`: added `models.providers.local`
+(`api: "openai-completions"`, vLLM's default base URL); `primary` →
+`local/qwen/qwen3.5-4b`; added the matching `agents.defaults.models` allow-list
+entry, without which the agent rejects the model and refuses every turn
+(`scripts/in2n-member-home.py`); **removed the vendor fallback**, which was a
+silent escape hatch back to a hosted provider the moment the local endpoint
+hiccups.
 
-Documentation was changed to match, not ahead of, the config: the hero line, the
-onboarding step, the "What It Does" sentence, the requirements list, and a new
-**Model runtime** section covering vLLM / LM Studio / SGLang.
+### Code that actually called a vendor API
 
-Two upstream statements were deliberately **left alone because they are true**:
+| Where | Was | Now |
+|---|---|---|
+| `src/netclaw_tokens/counter.py` | the vendor SDK's `count_tokens` | the **serving model's own** `/tokenize` (vLLM/SGLang), stdlib only |
+| `src/netclaw_tokens/cost_calculator.py` | a hosted price list; unknown models billed at the flagship rate | **zero by default** — the truth for a model you host — with `NETCLAW_TOKEN_PRICING_OVERRIDE` for endpoints that bill |
+| `mcp-servers/twilio-voice-mcp/webhook_server.py` | vendor `/v1/messages`, incl. a tool-use loop | OpenAI chat-completions, tool loop converted to `tool_calls` / `role:"tool"` |
+| `mcp-servers/twitter-mcp/server.py` | vendor `/v1/messages` | OpenAI chat-completions |
+| `scripts/in2n-member-home.py` | registered a direct vendor provider per member claw | registers the local OpenAI-compatible provider |
+| `scripts/probe-mist-mcp.py` | vendor `count_tokens` endpoint | the model server's `/tokenize` |
+| `tests/{fortinet,bgp-intel}/test_manifest_size.py` | vendor SDK for the budget ceiling | the shared counter, **keeping** the deliberately pessimistic `len/3.4` fallback so a budget check never guesses low |
+| `src/netclaw_tokens/requirements.txt` | `anthropic>=0.40.0` | **dependency removed**, nothing added |
 
-- The token tracker really does call Anthropic's `count_tokens()`
-  (`src/netclaw_tokens/counter.py`, with `anthropic>=0.40.0` a hard dependency
-  of that library). Rather than delete the claim, the consequence is now stated:
-  on an open-weights model it falls back to local estimation against a
-  Claude-shaped tokenizer, so counts are approximate.
-- Everything under `specs/` still refers to Claude. Those are historical design
-  records of work as it was actually done; rewriting them would falsify the
-  project's own history.
+The counter change is a correctness fix, not only a branding one. Calling one
+vendor's tokenizer to count tokens for a model that vendor does not serve
+returned an exact number from the **wrong tokenizer** — worse than an estimate,
+because it does not announce itself as approximate. Seven tests cover the new
+path (`tests/test_token_counter.py`); the 44 existing token-library tests still
+pass.
 
-Two traps are documented in the new section because both produce a config that
-looks correct and does not work: **Ollama's `/v1` breaks tool calling** (OpenClaw
-drives Ollama over native `/api/chat`), and **`${VAR:-default}` has no meaning
-here** — OpenClaw substitutes with `replace(/\$\{([^}]+)\}/g, ...)`, so the
-entire contents become the variable name.
+### Egress and installer
+
+The DefenseClaw sandbox allowlist and `netclaw-secure-start.sh` no longer punch
+a hole to a vendor domain — a loopback model server needs no outbound rule at
+all. `scripts/setup.sh` prompts for a model base URL instead of a vendor key,
+and `.env.example` documents `NETGENIUSCLAW_MODEL_BASE_URL` /
+`_API_KEY` / `NETGENIUSCLAW_MODEL`.
+
+### Also fixed in passing
+
+`mcp-servers/twitter-mcp/server.py` hardcoded the **upstream author's personal
+Twitter handle** into the agent's system prompt, so the agent introduced itself
+to strangers as a specific real person unconnected to this deployment. It now
+reads `TWITTER_HANDLE` and omits the handle when unset.
+
+### What was deliberately NOT renamed
+
+- **`CLAUDE.md`** and `.specify/init-options.json`'s agent selector. That
+  filename is an OpenClaw *runtime convention* — OpenClaw's own distribution
+  looks for it — not a dependency on any vendor's service. Renaming it stops the
+  runtime loading that context. Same class as `netclaw_tokens` and the FRR
+  container names in §1.
+- **Third-party names that must resolve**: `@anthropic-ai/microsoft-graph-mcp`
+  (13 files — and `scripts/check-package-references.py` exists precisely to
+  record that this package **404s**, so renaming it destroys the finding),
+  `anthropics/skills` (6 files), `opsmill/claude-marketplace`.
+- **`docs/ietf/`** — `draft-capobianco-ncfed-00` is a submitted IETF
+  Internet-Draft. Editing a published standards document to say something it
+  does not say is not a rename.
 
 ## What is NOT in this fork
 
@@ -111,6 +139,5 @@ projection, the decision-rule grader — is **not** here. It is a separate body 
 work that modifies no NetGeniusClaw source, and mixing an unrelated feature into
 a licensing-and-rebrand import would make both harder to review.
 
-The README still describes the agent as running on Anthropic Claude, which is
-what upstream ships. Moving it to an open-weights model is a configuration
-change made outside this tree.
+The README now describes the agent as running on an open-weights model, which
+is what this fork's shipped config actually does — see §5.

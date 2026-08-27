@@ -125,7 +125,7 @@ Device types are inferred from hostnames:
 
 | Error Code | Meaning | Resolution |
 |------------|---------|------------|
-| CONNECTION_FAILED | Blender not running or addon not connected | Start Blender, click 'Connect to Claude' in BlenderMCP panel |
+| CONNECTION_FAILED | Blender not running or addon not connected | Start Blender, click 'Connect to the agent' in BlenderMCP panel |
 | ADDON_NOT_READY | Addon not connected | Press 'N' in Blender, find BlenderMCP tab, click 'Connect' |
 | NO_CDP_DATA | No neighbor data available | Query network devices first via pyats-run or suzieq-show |
 | TIMEOUT | First command may timeout | This is normal - retry the same command |

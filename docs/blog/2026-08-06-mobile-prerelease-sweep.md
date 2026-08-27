@@ -2,7 +2,7 @@
 
 **Draft for review — not published.** Constitution Principle XVII requires John's sign-off first.
 
-*By John Capobianco and Claude · 2026-08-06*
+*By John Capobianco and the agent · 2026-08-06*
 
 John opened the NetGeniusClaw mobile app to a stuck notification badge and a Settings screen insisting push
 was unavailable, and asked for a serious sweep of the whole app — phone and watch — before he pays Apple

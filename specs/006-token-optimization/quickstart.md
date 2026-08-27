@@ -6,14 +6,14 @@
 ## Prerequisites
 
 - Python 3.10+
-- `ANTHROPIC_API_KEY` environment variable set
+- `NETGENIUSCLAW_MODEL_API_KEY` environment variable set
 - Existing NetGeniusClaw installation
 
 ## Installation
 
 ```bash
 # Install new dependencies
-pip install anthropic toon-format
+pip install model-provider toon-format
 
 # The shared library is at src/netclaw_tokens/
 # Ensure src/ is on your PYTHONPATH or install as editable package
@@ -37,7 +37,7 @@ print(f"Savings: {response.savings_pct:.1f}%")
 
 # 3. Test cost calculation
 from netclaw_tokens.cost_calculator import calculate_cost
-cost = calculate_cost(input_tokens=1245, output_tokens=382, model="claude-opus-4-6")
+cost = calculate_cost(input_tokens=1245, output_tokens=382, model="qwen/qwen3.5-4b")
 print(f"Cost: ${cost.total_cost:.4f}")
 
 # 4. Test footer formatting
@@ -50,7 +50,7 @@ print(footer)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | API key for token counting (already used by NetGeniusClaw) |
+| `NETGENIUSCLAW_MODEL_API_KEY` | Yes | API key for token counting (already used by NetGeniusClaw) |
 | `NETCLAW_TOKEN_PRICING_OVERRIDE` | No | JSON string to override default model pricing |
 
 ## What Changed

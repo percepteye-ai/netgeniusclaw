@@ -2,7 +2,7 @@
 
 **Features**: 042-twilio-voice-mcp, 043-full-voice-integration
 
-Universal voice interface for NetGeniusClaw using Twilio. **Voice is just I/O** - Claude already has access to ALL 40+ MCPs and 100+ skills via voice.
+Universal voice interface for NetGeniusClaw using Twilio. **Voice is just I/O** - the agent already has access to ALL 40+ MCPs and 100+ skills via voice.
 
 ## Overview
 
@@ -18,10 +18,10 @@ This MCP server provides:
 ## Architecture
 
 ```
-Phone → Twilio STT → Claude (ALL 40+ MCPs) → Speech Formatter → Twilio TTS → Phone
+Phone → Twilio STT → the agent (ALL 40+ MCPs) → Speech Formatter → Twilio TTS → Phone
 ```
 
-Voice is a universal I/O channel. Claude already knows how to:
+Voice is a universal I/O channel. the agent already knows how to:
 - Query IP Fabric, Forward Networks, Itential
 - Open ServiceNow tickets
 - Generate Blender diagrams
@@ -102,8 +102,8 @@ VOICE_WEBHOOK_URL=https://your-domain/webhooks/twilio/voice
 VOICE_MAX_CALL_MINUTES=30
 VOICE_WARN_MINUTES=25
 
-# Claude for universal tool access
-ANTHROPIC_API_KEY=sk-ant-xxxxx
+# the agent for universal tool access
+NETGENIUSCLAW_MODEL_API_KEY=sk-ant-xxxxx
 ```
 
 ## Quick Start

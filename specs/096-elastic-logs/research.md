@@ -104,7 +104,7 @@ specified — because the manifest was 11,783 tokens (2.36× over) with no tool-
 
 **Decision**: Passes comfortably.
 
-Measured with the Anthropic `count_tokens` endpoint as a delta over an 8-token baseline:
+Measured with the the model provider `count_tokens` endpoint as a delta over an 8-token baseline:
 
 | Component | Tokens |
 |---|---|

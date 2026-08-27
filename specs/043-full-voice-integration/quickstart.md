@@ -128,7 +128,7 @@ systemctl --user restart openclaw-gateway.service
 ### No response from NetGeniusClaw
 - Check webhook_server.py is running
 - Verify ngrok tunnel is active
-- Check Claude API key is valid
+- Check the agent API key is valid
 
 ### MCP tools not available
 - Verify MCP servers are registered in openclaw.json

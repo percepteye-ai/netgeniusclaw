@@ -98,7 +98,7 @@ The same way an operator could watch the Chrome DevTools "Watch Mode" browser se
 
 ## Assumptions
 
-- The integration target is OpenClaw's ClawHub-hosted "computer-use" skill (Linux headless-server virtual desktop, verified available on this deployment's host via a live catalog search) — not the separate "codex-computer-use" plugin, which is Codex-mode-specific and macOS-only and does not apply to this Claude-based, Linux-hosted deployment.
+- The integration target is OpenClaw's ClawHub-hosted "computer-use" skill (Linux headless-server virtual desktop, verified available on this deployment's host via a live catalog search) — not the separate "codex-computer-use" plugin, which is Codex-mode-specific and macOS-only and does not apply to this the agent-based, Linux-hosted deployment.
 - A single shared virtual desktop is sufficient for v1, the same assumption spec 048 made for its single shared browser profile — concurrent use is handled by detection and conflict-reporting, not by provisioning multiple parallel virtual desktops.
 - No NetClaw-authored fork of the computer-use skill itself is created; it is consumed as-is via ClawHub, consistent with the "no forked server code" pattern already used for the Chrome DevTools integration and other community-sourced capabilities.
 - The live-viewing service defaults to loopback-only access; an operator who wants to view it from a different machine is expected to establish their own secure path (e.g., SSH port forwarding), mirroring the remote-debugging-over-SSH-tunnel pattern already documented for headless hosts in spec 048.

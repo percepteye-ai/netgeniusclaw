@@ -144,7 +144,7 @@ No bespoke audit trail or domain allowlist is built into this integration. It re
 
 ## Usage Examples
 
-Once registered with an MCP client (OpenClaw, Claude Desktop, etc.):
+Once registered with an MCP client (OpenClaw, the agent Desktop, etc.):
 
 - "Verify the topology visualization you just generated actually rendered." (`browser-viz-verify`)
 - "Pull the bridge domain list from the ACI tenant page in APIC — the API doesn't expose it the way I need." (`browser-gui-inspect`)

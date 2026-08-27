@@ -282,7 +282,7 @@ considered complete, not optional cleanup:
       resolve cleanly. `scripts/reconcile-mcp.py` PASS on all 7 surfaces including `startup`.
 - [X] T054 **Fully live end-to-end, real meeting, real device (2026-08-20)** — a spoken question in
       a real Zoom meeting ("Can you check R1, is the interface status okay?") was recognized,
-      routed through the Border to a real Claude Sonnet 5 agent turn, which called pyATS against the
+      routed through the Border to a real the agent Sonnet 5 agent turn, which called pyATS against the
       real DevNet sandbox device, and the real answer rendered back in the live panel — watched
       directly by the operator. US1/US3/US4 (core investigation, panel visibility, safety boundary)
       all confirmed live. RTMS Developer Pack billing confirmed active and metering correctly.
@@ -322,7 +322,7 @@ considered complete, not optional cleanup:
       MCP connector — T030) and US5 (camera-overlay avatar, needs Layers API review — T038/T042).
 - [ ] T055 **Drafted (2026-08-20), awaiting John's review before publishing** — not yet published
       anywhere per Constitution Principle XVII's own requirement. Draft lives outside the repo at
-      `/private/tmp/claude-503/.../scratchpad/zoom-meeting-intelligence-blog-draft.md` (this
+      `/private/tmp/agent-503/.../scratchpad/zoom-meeting-intelligence-blog-draft.md` (this
       session's scratchpad, not committed) pending explicit go-ahead to publish.
 
 ---

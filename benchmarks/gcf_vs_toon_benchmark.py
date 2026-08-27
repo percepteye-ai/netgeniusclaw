@@ -17,7 +17,7 @@ import tiktoken
 
 from gcf import encode_generic
 
-# Use cl100k_base (GPT-4/Claude tokenizer approximation)
+# Use cl100k_base (GPT-4/the agent tokenizer approximation)
 enc = tiktoken.get_encoding("cl100k_base")
 
 

@@ -1,6 +1,6 @@
 # Ollama MCP — Local LLM Domain Expert Delegation
 
-An MCP server that lets your orchestrating AI model (Claude, GPT, Qwen, DeepSeek, etc.) delegate domain-specific tasks to local Ollama models running on your own GPU. Instead of one model doing everything, purpose-built specialists handle structured tasks while the orchestrator focuses on planning and user interaction.
+An MCP server that lets your orchestrating AI model (the agent, GPT, Qwen, DeepSeek, etc.) delegate domain-specific tasks to local Ollama models running on your own GPU. Instead of one model doing everything, purpose-built specialists handle structured tasks while the orchestrator focuses on planning and user interaction.
 
 ## Why
 
@@ -17,7 +17,7 @@ These tasks are ideal for **small local models (7B) with baked-in system prompts
 
 ```
 ┌─────────────────────────────────────────┐
-│ Orchestrating Model (Claude, etc.)      │
+│ Orchestrating Model (the agent, etc.)      │
 │ Plans, decides, interacts with user     │
 └──────────┬──────────────────────────────┘
            │ MCP tool calls

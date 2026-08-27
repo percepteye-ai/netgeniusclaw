@@ -63,9 +63,9 @@ tests/
         "contextAutoSummarize": false
       },
       "interfaceDefaults": {
-        "openai": { "model": "anthropic/claude-haiku-4-5", "thinkingLevel": "medium" },
-        "n2n": { "model": "anthropic/claude-haiku-4-5", "thinkingLevel": "medium" },
-        "discord": { "model": "anthropic/claude-haiku-4-5", "thinkingLevel": "low" },
+        "openai": { "model": "local/qwen/qwen3.5-4b", "thinkingLevel": "medium" },
+        "n2n": { "model": "local/qwen/qwen3.5-4b", "thinkingLevel": "medium" },
+        "discord": { "model": "local/qwen/qwen3.5-4b", "thinkingLevel": "low" },
         "tui": {},
         "explicit": {}
       }

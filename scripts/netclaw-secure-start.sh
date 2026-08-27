@@ -293,13 +293,14 @@ network_policies:
       - { path: /usr/bin/node }
       - { path: /usr/local/bin/node }
 
-  # Anthropic Claude API
-  anthropic:
-    name: anthropic-api
+  # Model endpoint. Default is loopback, which needs no egress rule at all;
+  # widen this only if you serve the model from another host.
+  model-endpoint:
+    name: model-endpoint
     endpoints:
-      - host: api.anthropic.com
-        port: 443
-        protocol: https
+      - host: 127.0.0.1
+        port: 8000
+        protocol: http
         enforcement: enforce
         access: full
     binaries:
@@ -759,12 +760,12 @@ def clean_config(config):
                 if p not in ["defenseclaw", "webex"]
             ]
 
-    # Change model from defenseclaw/* to anthropic/* for sandbox
+    # Change model from defenseclaw/* to model-provider/* for sandbox
     # (DefenseClaw gateway runs on host, not accessible from sandbox)
     if "agent" in config and "model" in config["agent"]:
         model = config["agent"]["model"]
         if model.startswith("defenseclaw/"):
-            config["agent"]["model"] = model.replace("defenseclaw/", "anthropic/")
+            config["agent"]["model"] = model.replace("defenseclaw/", "model-provider/")
             print(f"  Model changed for sandbox: {model} -> {config['agent']['model']}")
 
     return config

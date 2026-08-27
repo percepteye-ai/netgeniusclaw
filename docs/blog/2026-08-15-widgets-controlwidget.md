@@ -2,7 +2,7 @@
 
 **Draft for review — not published.** Constitution Principle XVII requires John's sign-off first.
 
-*By John Capobianco and Claude · 2026-08-15*
+*By John Capobianco and the agent · 2026-08-15*
 
 Fourth NetGeniusClaw Mobile feature today, and the first that started with someone else's mistake — Apple's own
 Xcode wizard, not ours, though it took a real build to find it.

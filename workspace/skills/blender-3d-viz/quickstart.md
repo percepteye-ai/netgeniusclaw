@@ -51,7 +51,7 @@ winget install BlenderFoundation.Blender
    - This opens the right sidebar
 2. Look for the **"BlenderMCP"** tab in the sidebar
 3. Click on it to expand
-4. Click **"Connect to Claude"**
+4. Click **"Connect to the agent"**
 5. You should see: "Server running on port 9876"
 
 **Keep Blender open with this connection active!**
@@ -131,7 +131,7 @@ You: Export the Blender scene as topology.png
 
 ### "Connection refused" error
 - **Check**: Is Blender running?
-- **Check**: Did you click "Connect to Claude" in Blender?
+- **Check**: Did you click "Connect to the agent" in Blender?
 - **Check**: Is the BlenderMCP tab showing "Server running"?
 
 ### First command times out

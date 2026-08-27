@@ -91,16 +91,17 @@ Three things worth knowing before you change it:
   the shipped config does.
 
 **Prefer a hosted model?** Nothing stops you — register the provider you want
-and point `primary` at it. `openclaw onboard` walks through Anthropic, OpenAI,
+and point `primary` at it. `openclaw onboard` walks through the model provider, OpenAI,
 Bedrock, Vertex and 30+ others. The default is open weights because this fork is
 built to run on infrastructure you control, not because anything here depends on
 it.
 
-**One honest caveat.** The token tracker calls Anthropic's `count_tokens()` API
-for exact counts (`src/netclaw_tokens/counter.py`, and `anthropic` is a hard
-dependency of that library). On an open-weights model there is no such call to
-make, so it falls back to local estimation against a Claude-shaped tokenizer.
-Costs and counts are then approximate.
+**Token counting.** The tracker asks the **model server** for exact counts, via
+the `/tokenize` endpoint vLLM and SGLang expose, so the number comes from the
+tokenizer actually generating the text. With no server reachable it falls back to
+a `len/4` estimate and marks the result `estimated`. Cost defaults to **zero**,
+which is the truth for a model you host — declare
+`NETCLAW_TOKEN_PRICING_OVERRIDE` if your endpoint bills per token.
 
 ### Agent runtime — OpenClaw or Hermes
 
@@ -219,7 +220,7 @@ Whatever you pick, the installer then runs a two-phase setup:
 
 **Phase 1: `openclaw onboard`** (OpenClaw's built-in wizard)
 - Pick your model provider. NetGeniusClaw ships pointed at a **local OpenAI-compatible
-  server** (vLLM / LM Studio / SGLang); OpenClaw also offers Anthropic, OpenAI, Bedrock,
+  server** (vLLM / LM Studio / SGLang); OpenClaw also offers the model provider, OpenAI, Bedrock,
   Vertex and 30+ others if you would rather use a hosted one
 - Set up the gateway (local mode, auth, port)
 - Connect channels (Slack, Discord, Telegram, WhatsApp, etc.)
@@ -368,7 +369,7 @@ model you host, that can:
 - **Diagram** AWS architecture — auto-discover and render VPCs, subnets, TGWs, load balancers as visual topology diagrams (requires graphviz)
 - **Stream** gNMI telemetry from Cisco IOS-XR, Juniper, Arista, and Nokia SR OS devices — structured YANG model queries, SAMPLE/ON_CHANGE subscriptions, ITSM-gated configuration changes, YANG capability browsing, and gNMI-vs-CLI state comparison
 - **Audit** every action in an immutable Git-based trail (GAIT) — there is always an answer to "what did the AI do and why"
-- **Track** token consumption and cost in real-time — every interaction displays input/output tokens, USD cost, and GCF savings. Session-level tracking with per-tool breakdown. Powered by Anthropic's `count_tokens()` API with local estimation fallback — note that on an open-weights model there is no Anthropic call to make, so this falls back to local estimation against a Claude-shaped tokenizer and the counts are approximate
+- **Track** token consumption and cost in real-time — every interaction displays input/output tokens, USD cost, and GCF savings. Session-level tracking with per-tool breakdown. Counts come from the model server's own `/tokenize` endpoint, so they are exact for the tokenizer in use; with no server reachable the tracker falls back to a local estimate and says so. Self-hosted cost defaults to zero
 - **Optimize** token usage with GCF encoding — all MCP server responses use [GCF](https://gcformat.com) (Graph Compact Format) for 55-83% token savings on network data. Auto-detects graph-shaped data (devices + links/sessions) and uses graph profile with local IDs and edge arrows. Session deduplication tracks previously-sent symbols across calls (91% savings by call 3). Delta encoding sends only changes on re-queries (99% savings). Configurable via `NETCLAW_GCF_MODE`: `full` (default), `graph`, `generic`, or `off`. JSON fallback on any error
 - **Remember** across sessions with [MemPalace](https://github.com/milla-jovovich/mempalace) — semantic search across all past sessions, temporal knowledge graph for network facts (upgrades, peer changes, maintenance windows) with validity windows, cross-domain navigation between wings, and per-agent diaries. Complements OpenClaw's file-based daily logs (`memory/YYYY-MM-DD.md`) with structured, searchable long-term memory — *"GAIT records what happened. MemPalace remembers why."*
 - **Secure** production deployments with [DefenseClaw](https://github.com/cisco-ai-defense/defenseclaw) — Cisco AI Defense enterprise security: OpenShell kernel-level sandbox (Landlock, seccomp, namespaces), component scanning before execution, CodeGuard static analysis, LLM prompt/completion inspection, runtime guardrails, SQLite audit logging with SIEM export (Splunk HEC, OTLP) for SOC2/PCI-DSS/HIPAA compliance

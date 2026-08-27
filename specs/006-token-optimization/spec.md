@@ -3,7 +3,7 @@
 **Feature Branch**: `006-token-optimization`
 **Created**: 2026-03-26
 **Status**: Draft
-**Input**: User description: "Integrate Anthropic count_tokens API for real-time token and cost tracking on every interaction, plus TOON format for all MCP server responses and LLM interactions to reduce token consumption by 40-60%."
+**Input**: User description: "Integrate the model provider count_tokens API for real-time token and cost tracking on every interaction, plus TOON format for all MCP server responses and LLM interactions to reduce token consumption by 40-60%."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -46,7 +46,7 @@ tokens, and estimated cost in USD.
    cost, per-tool token counts, and a comparison showing tokens
    saved by TOON format.
 
-4. **Given** the Anthropic API is unreachable for token counting,
+4. **Given** the the model endpoint is unreachable for token counting,
    **When** the operator runs a command,
    **Then** the system estimates token count locally (approximate)
    and marks the count as "estimated" rather than failing silently.
@@ -193,7 +193,7 @@ NetBox, Grafana, and other bundled MCP servers.
 
 ### Edge Cases
 
-- What happens when the Anthropic count_tokens API is rate-limited?
+- What happens when the the model provider count_tokens API is rate-limited?
 - How does the system handle counting tokens for image or PDF content
   in tool responses?
 - What happens when a TOON-encoded response exceeds the context
@@ -210,7 +210,7 @@ NetBox, Grafana, and other bundled MCP servers.
 ### Functional Requirements
 
 - **FR-001**: System MUST count input and output tokens for every
-  LLM interaction using Anthropic's official count_tokens API.
+  LLM interaction using the model provider's official count_tokens API.
 - **FR-002**: System MUST display a token/cost summary footer at the
   bottom of every response showing: input tokens, output tokens,
   total tokens, and estimated USD cost.
@@ -238,11 +238,11 @@ NetBox, Grafana, and other bundled MCP servers.
 - **FR-013**: System MUST handle prompt caching scenarios by
   reflecting cached vs uncached token costs accurately.
 - **FR-014**: System MUST provide an approximate local token estimate
-  when the Anthropic API is unreachable, clearly marked as estimated.
+  when the the model endpoint is unreachable, clearly marked as estimated.
 - **FR-015**: System MUST update all bundled MCP servers (pyATS,
   NetBox, Grafana, ServiceNow, protocol-mcp, SuzieQ, Batfish, gNMI,
   Azure, and others) to use TOON serialization.
-- **FR-016**: All token tracking credentials (ANTHROPIC_API_KEY) MUST
+- **FR-016**: All token tracking credentials (NETGENIUSCLAW_MODEL_API_KEY) MUST
   be read from environment variables.
 - **FR-017**: System MUST never hide, omit, or suppress token counts.
   Every interaction shows its cost. This is non-negotiable.
@@ -272,7 +272,7 @@ NetBox, Grafana, and other bundled MCP servers.
 - **SC-003**: Tabular network data (route tables, interface lists,
   BGP peer tables) achieves at least 50% token savings when
   TOON-serialized.
-- **SC-004**: Token counts from the Anthropic API match billing
+- **SC-004**: Token counts from the the model endpoint match billing
   within 5% accuracy.
 - **SC-005**: Per-tool token breakdown is available within 1 second
   on demand.
@@ -288,14 +288,14 @@ NetBox, Grafana, and other bundled MCP servers.
 
 ## Assumptions
 
-- Anthropic's count_tokens API is free to use and available at the
+- the model provider's count_tokens API is free to use and available at the
   rate limits sufficient for NetGeniusClaw's operational volume.
 - The `toon-format` Python package provides reliable serialization
   and deserialization for all data types NetGeniusClaw's MCP servers return.
-- Claude models (Opus 4.6, Sonnet 4.6, Haiku 4.5) can accurately
+- the agent models (Opus 4.6, Sonnet 4.6, Haiku 4.5) can accurately
   parse and reason about TOON-formatted data with no accuracy loss
   compared to JSON.
-- The ANTHROPIC_API_KEY environment variable is already configured
+- The NETGENIUSCLAW_MODEL_API_KEY environment variable is already configured
   for NetGeniusClaw's operation (required for the LLM itself, reused for
   token counting).
 - Existing MCP servers can be updated to use a shared TOON
@@ -303,5 +303,5 @@ NetBox, Grafana, and other bundled MCP servers.
 - Binary data (pcap files, images) will not be TOON-encoded; only
   structured text/JSON responses are candidates for TOON.
 - Token pricing is hardcoded initially and updated manually when
-  Anthropic changes rates. An env var override is provided for
+  the model provider changes rates. An env var override is provided for
   custom pricing.

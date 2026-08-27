@@ -56,7 +56,7 @@ The server communicates via stdio. It will wait for JSON-RPC messages on stdin.
 
 ## Usage Examples
 
-Once registered with an MCP client (Claude Desktop, OpenClaw, etc.):
+Once registered with an MCP client (the agent Desktop, OpenClaw, etc.):
 
 - "Show me open issues in project network-automation"
 - "List merge requests awaiting review in network-configs"

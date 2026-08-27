@@ -128,7 +128,7 @@ This is useful for:
 
 ## Usage Examples
 
-Once registered with an MCP client (OpenClaw, Claude Desktop, etc.):
+Once registered with an MCP client (OpenClaw, the agent Desktop, etc.):
 
 - "Show me open issues in project network-automation"
 - "List merge requests awaiting review in project infra-configs"

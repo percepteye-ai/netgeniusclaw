@@ -66,7 +66,7 @@ The Atlassian MCP server (community mcp-atlassian by sooperset) provides 72 tool
 ## Token Optimization Infrastructure
 
 The `netclaw_tokens` shared library (`src/netclaw_tokens/`) provides token counting, TOON serialization, and cost tracking:
-- **counter.py** — Token counting via Anthropic `count_tokens()` API with `len/4` fallback
+- **counter.py** — Token counting via the model provider `count_tokens()` API with `len/4` fallback
 - **toon_serializer.py** — TOON format serialization for MCP responses (40-60% savings on tabular data)
 - **cost_calculator.py** — Model-aware pricing: Opus ($5/$25), Sonnet ($3/$15), Haiku ($1/$5) per 1M tokens
 - **session_ledger.py** — Thread-safe cumulative session tracking with per-tool breakdown

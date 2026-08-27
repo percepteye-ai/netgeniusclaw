@@ -66,7 +66,7 @@ small specialists:
   Border advertises the **aggregate** of member capabilities under the risk (so a
   peer learns "this risk can do CML, pyATS, Azure…") without exposing structure.
 - **Any provider/model per claw.** Each member is its own OpenClaw *embedded*
-  agent (`openclaw agent --local --model <provider/model>`) — Anthropic, OpenAI,
+  agent (`openclaw agent --local --model <provider/model>`) — the model provider, OpenAI,
   Google, or **local/Ollama**, mixed freely. The Border can reason on a flagship
   model while members run cheaper/faster ones.
 - **Hybrid runtime (cold/on-demand).** A hot set stays always-on; other members
@@ -198,7 +198,7 @@ consenting peers. Feature 057 enriched the card so a neighbour understands not j
     "controls": { "sandbox": true, "model-guard": true, "audit": true }
   },
   "llm": {                          // NEW (057): reasoning capability, no secrets
-    "primary_model": "claude-opus-4-8",
+    "primary_model": "agent-opus-4-8",
     "guarded": true,                // routed through the DefenseClaw guardrail
     "note": "Border reasoning model; member claws run their own per-specialty tiered models"
   }
@@ -304,7 +304,7 @@ Decomposing a real monolith into a risk surfaced details worth writing down:
   the Border still carries ~190 skill files and answers like the monolith instead
   of routing. Point `agents.defaults.workspace` at the Border workspace + restart
   the gateway.
-- **Models:** each claw registers a **direct provider** (any: Anthropic / OpenAI /
+- **Models:** each claw registers a **direct provider** (any: the model provider / OpenAI /
   local Ollama) at its tier — Border=Opus, heavy members=Sonnet, trivial=Haiku.
   If your model routes through a proxy (e.g. a DefenseClaw LLM gateway) make sure
   it's running, or register a direct provider so a claw isn't blocked by a down

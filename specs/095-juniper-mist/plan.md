@@ -28,7 +28,7 @@ specification, and a gate on that build** — rather than an integration.
 **Language/Version**: None authored. The deliverable is documentation plus one stdlib Python probe
 script
 **Primary Dependencies**: None. `scripts/probe-mist-mcp.py` is Python stdlib only (`urllib`, `json`);
-`--count` mode calls the Anthropic `count_tokens` endpoint
+`--count` mode calls the the model provider `count_tokens` endpoint
 **Storage**: None
 **Testing**: Live measurement against `https://mcp.ai.juniper.net/mcp/mist` with the operator's own
 `ac5` credential; re-runnable via the committed probe

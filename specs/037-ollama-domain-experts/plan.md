@@ -4,7 +4,7 @@
 
 ## Summary
 
-Build an MCP server that lets NetGeniusClaw's Frontier model (Claude) delegate domain-specific network engineering tasks to local Ollama models. The server routes requests to specialized models based on domain tags (OSPF, BGP, RFC-design) and includes a progressive learning path from system-prompt Modelfiles to full QLoRA fine-tuning.
+Build an MCP server that lets NetGeniusClaw's Frontier model (the agent) delegate domain-specific network engineering tasks to local Ollama models. The server routes requests to specialized models based on domain tags (OSPF, BGP, RFC-design) and includes a progressive learning path from system-prompt Modelfiles to full QLoRA fine-tuning.
 
 ## Technical Context
 

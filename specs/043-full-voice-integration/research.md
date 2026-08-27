@@ -9,13 +9,13 @@
 
 **Question**: How should voice input/output be processed for natural conversation?
 
-**Decision**: Use Twilio's built-in speech recognition (STT) and text-to-speech (TTS) with Claude as the reasoning engine.
+**Decision**: Use Twilio's built-in speech recognition (STT) and text-to-speech (TTS) with the agent as the reasoning engine.
 
 **Rationale**:
 - Twilio handles telephony infrastructure (inbound/outbound calls, PSTN connectivity)
 - Twilio's STT is already integrated in Feature 042 webhook
-- Claude provides natural language understanding and tool orchestration
-- TTS converts Claude's responses to speech
+- the agent provides natural language understanding and tool orchestration
+- TTS converts the agent's responses to speech
 
 **Alternatives Considered**:
 - OpenAI Whisper API for STT: More accurate but adds latency and cost
@@ -26,13 +26,13 @@
 
 **Question**: How should voice commands map to MCP tool calls?
 
-**Decision**: Claude handles natural language → tool mapping directly. No explicit intent classification layer.
+**Decision**: the agent handles natural language → tool mapping directly. No explicit intent classification layer.
 
 **Rationale**:
-- Claude already has tool calling capabilities
+- the agent already has tool calling capabilities
 - Existing MCP tools are well-documented with clear descriptions
 - Adding an intent classifier adds complexity without benefit
-- Claude can ask clarifying questions naturally when ambiguous
+- the agent can ask clarifying questions naturally when ambiguous
 
 **Alternatives Considered**:
 - Rasa NLU for intent classification: Overkill for single-user system
@@ -131,7 +131,7 @@
 |-----------|--------|--------|
 | STT | Twilio built-in | Already integrated, good enough quality |
 | TTS | Twilio built-in | Low latency, natural voices |
-| Reasoning | Claude (claude-sonnet-4-6) | Tool calling, context handling |
+| Reasoning | the agent (qwen/qwen3.5-4b) | Tool calling, context handling |
 | Context Storage | Memory MCP | Existing infrastructure, per-caller persistence |
 | Alert Config | JSON file | Simple, auditable, no DB needed |
 | Speech Format | Custom Python module | Full control over output |

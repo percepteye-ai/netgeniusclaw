@@ -5,7 +5,7 @@
 
 ## Overview
 
-This document defines the contract between voice input and MCP tool execution. The voice webhook receives transcribed speech, passes it to Claude for intent resolution, and Claude invokes the appropriate MCP tools.
+This document defines the contract between voice input and MCP tool execution. The voice webhook receives transcribed speech, passes it to the agent for intent resolution, and the agent invokes the appropriate MCP tools.
 
 ## Voice Command Categories
 

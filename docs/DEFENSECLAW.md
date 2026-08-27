@@ -272,7 +272,7 @@ openshell run netgeniusclaw -- ls -la
 openshell run netgeniusclaw -- claw
 
 # Run with environment variables
-openshell run netgeniusclaw --env ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY -- claw
+openshell run netgeniusclaw --env NETGENIUSCLAW_MODEL_API_KEY=$NETGENIUSCLAW_MODEL_API_KEY -- claw
 ```
 
 ### Policy Configuration
@@ -296,8 +296,8 @@ filesystem:
 
 network:
   allow_outbound:
-    - "*.anthropic.com:443"
-    - "*.openai.com:443"
+    # The model server is local; loopback needs no outbound rule. Add your
+    # own host:port here only if you serve the model off-box.
     - "api.netbox.io:443"
   deny_outbound:
     - "*:22"  # No SSH from sandbox
@@ -315,7 +315,7 @@ The secure startup script applies a comprehensive network policy that allows:
 |----------|-------------------|
 | **Slack** | api.slack.com, wss-*.slack.com, files.slack.com |
 | **WebEx** | webexapis.com, api.ciscospark.com |
-| **LLM APIs** | api.anthropic.com, api.openai.com |
+| **LLM APIs** | your model endpoint, api.openai.com |
 | **MCPs** | devnet.cisco.com, api.datadoghq.com, api.meraki.com |
 | **Cloud** | AWS, Azure, GCP management APIs |
 | **DevOps** | GitHub, GitLab, Terraform, Vault |
@@ -437,7 +437,7 @@ Guardrails enforce 6 categories:
 ### LLM Providers Supported
 
 DefenseClaw inspects prompts/completions for:
-- Anthropic (Claude)
+- the model provider (the agent)
 - OpenAI (GPT)
 - Google (Gemini)
 - AWS Bedrock

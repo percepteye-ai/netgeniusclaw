@@ -2,7 +2,7 @@
 
 **Draft for review — not published.** Constitution Principle XVII requires John's sign-off first.
 
-*By John Capobianco and Claude · 2026-08-15*
+*By John Capobianco and the agent · 2026-08-15*
 
 Third feature in a row today, and the biggest one: Approve/Deny buttons on NetGeniusClaw's Lock Screen Live
 Activity, and a brand-new Live Activity that watches a submitted question while it's being answered. The

@@ -1,7 +1,7 @@
 ---
 title: "Make It Mean It: turning a NetGeniusClaw risk's 'production mode' from a label into fail-closed enforcement"
 date: 2026-07-13
-authors: [John, Claude]
+authors: [John, the agent]
 status: draft
 target: WordPress MCP (present to John for review before publishing — Constitution XVII)
 spec: specs/057-in2n-production-enforcement/
@@ -187,7 +187,7 @@ enforces it, or looks you in the eye and says exactly which guarantee it can't m
 
 ---
 
-*Written by John and Claude. Spec 057, built spec-through-implement and validated
+*Written by John and the agent. Spec 057, built spec-through-implement and validated
 live on the running Border `johns-risk` — posture, sandbox, guard, immutable GAIT
 trail, and durable services all exercised against the real system, with Nick
 (AS 65007) and Byrn (AS 65099) federated throughout.*

@@ -44,7 +44,7 @@ cd netgeniusclaw
 The installer runs two setup phases:
 
 **Phase 1: `openclaw onboard`** (OpenClaw's built-in wizard)
-- Pick your AI provider (Anthropic, OpenAI, Bedrock, Vertex, 30+ options)
+- Pick your AI provider (the model provider, OpenAI, Bedrock, Vertex, 30+ options)
 - Set up the gateway (local mode, auth, port)
 - Connect channels (Slack, WebEx, Discord, Telegram, etc.)
 - Install the daemon service
@@ -90,7 +90,7 @@ You should see:
 
 ```
 [gateway] listening on ws://127.0.0.1:18789
-[gateway] agent model: anthropic/claude-sonnet-4-6
+[gateway] agent model: local/qwen/qwen3.5-4b
 ```
 
 The gateway must be running for live chat responses and tool execution (Slack messages, GitHub issues, ServiceNow tickets, mind maps, etc.). Without it, the chat falls back to a local heuristic that identifies which integrations and devices are relevant but cannot execute tools.
@@ -491,7 +491,7 @@ Browser (Visual HUD + Canvas Chat @ localhost:3000)
     |     +-- Polls BGP daemon at localhost:8179
     |
     +-- OpenClaw Gateway (@ localhost:18789)
-          +-- Anthropic Claude (agent model)
+          +-- model endpoint (agent model)
           +-- 43 MCP integrations (pyATS, ACI, ISE, NetBox, GitHub, Slack, ...)
           +-- 179 skills (health checks, troubleshooting, auditing, ...)
 ```

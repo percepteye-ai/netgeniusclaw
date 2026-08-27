@@ -2,7 +2,7 @@
 
 **Draft for review — not published.** Constitution Principle XVII requires John's sign-off first.
 
-*By John Capobianco and Claude · 2026-08-15*
+*By John Capobianco and the agent · 2026-08-15*
 
 Right after finishing Siri integration, John wanted to keep moving through the rest of the NetGeniusClaw Mobile
 1.0.1 wish list rather than stop for device testing — two of the smallest remaining items, bundled

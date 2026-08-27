@@ -104,8 +104,8 @@ def main():
             f"OPENCLAW_STATE_DIR={os.path.expanduser('~/.openclaw-' + args.risk + '-' + name)}",
             f"N2N_MEMBER_SCOPE={_scope_json(info['skills'])}",
             "# Pick THIS member's provider/model (any provider incl local/Ollama):",
-            "N2N_MEMBER_MODEL=anthropic/claude-sonnet-5   # <-- edit per member",
-            "# ANTHROPIC_API_KEY / OPENAI_API_KEY / OLLAMA_HOST as needed for the model above",
+            "N2N_MEMBER_MODEL=model-provider/qwen/qwen3.5-4b   # <-- edit per member",
+            "# NETGENIUSCLAW_MODEL_API_KEY / OPENAI_API_KEY / OLLAMA_HOST as needed for the model above",
             "# N2N_ENROLLMENT_TOKEN=<paste from: netclaw risk add …>   # first run only",
         ]
         with open(os.path.join(mdir, ".env"), "w") as fh:

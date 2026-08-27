@@ -204,8 +204,8 @@ _HEAVY = {"cml", "pyats", "itential", "aap", "nso", "aci", "catalyst-center", "f
           "paloalto", "ise", "forward", "ipfabric", "sdwan", "azure", "netbox",
           "checkpoint", "fortimanager", "batfish"}
 def model_tier(profile: str) -> str:
-    """Default Claude model id for a member of this profile (operator-overridable)."""
-    return "claude-sonnet-5" if profile in _HEAVY else "claude-haiku-4-5-20251001"
+    """Default the agent model id for a member of this profile (operator-overridable)."""
+    return "qwen/qwen3.5-4b" if profile in _HEAVY else "qwen/qwen3.5-4b-20251001"
 
 
 def _configured_env():

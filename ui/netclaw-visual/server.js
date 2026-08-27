@@ -849,8 +849,8 @@ function buildSettings(config, devices) {
   const modelFallbacks = config?.agents?.defaults?.model?.fallbacks || [];
   return [
     { label: 'Gateway Mode', value: config?.gateway?.mode || 'unknown' },
-    { label: 'Primary Model', value: modelPrimary.replace('anthropic/', '') },
-    { label: 'Fallback Models', value: modelFallbacks.length ? modelFallbacks.join(', ').replaceAll('anthropic/', '') : 'none' },
+    { label: 'Primary Model', value: modelPrimary.replace('model-provider/', '') },
+    { label: 'Fallback Models', value: modelFallbacks.length ? modelFallbacks.join(', ').replaceAll('model-provider/', '') : 'none' },
     { label: 'Workspace', value: config?.agents?.defaults?.workspace || 'unknown' },
     { label: 'Command Mode', value: config?.commands?.native || 'unknown' },
     { label: 'Devices in Testbed', value: String(devices.length) },

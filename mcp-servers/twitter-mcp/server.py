@@ -100,22 +100,31 @@ _interaction_history: InteractionHistory = InteractionHistory()
 _reply_audit_log: ReplyAuditLog = ReplyAuditLog()
 _authenticated_user_id: str | None = None
 
-# Anthropic API for contextual replies
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+# Model endpoint for contextual replies
+# The model endpoint: an OpenAI-compatible server you run, not a hosted vendor.
+MODEL_BASE_URL = os.environ.get("NETGENIUSCLAW_MODEL_BASE_URL", "http://127.0.0.1:8000/v1").rstrip("/")
+MODEL_API_KEY = os.environ.get("NETGENIUSCLAW_MODEL_API_KEY", "vllm-local")
+MODEL_ID = os.environ.get("NETGENIUSCLAW_MODEL", "qwen/qwen3.5-4b")
+
+#: The account this agent posts as. It was hardcoded to the upstream author's
+#: personal handle, which a fork must not keep: the agent would introduce
+#: itself to strangers as a specific real person who has nothing to do with
+#: this deployment.
+TWITTER_HANDLE = os.environ.get("TWITTER_HANDLE", "").strip()
 
 
 async def generate_contextual_reply(author: str, tweet_text: str, category: str) -> str:
     """
-    Use Claude to generate a contextual reply that ACTUALLY responds to what the person said.
-    This proves NetClaw is reading and understanding tweets, not just posting canned responses.
+    Use the configured model to generate a contextual reply that ACTUALLY responds
+    to what the person said, rather than posting a canned response.
     """
-    if not ANTHROPIC_API_KEY:
-        # Fallback to basic contextual response if no API key
-        logger.warning("No ANTHROPIC_API_KEY - using basic contextual reply")
+    if not MODEL_API_KEY:
+        logger.warning("No model endpoint configured - using basic contextual reply")
         return generate_basic_contextual_reply(author, tweet_text, category)
 
     try:
-        system_prompt = """You are NetClaw (@John_Capobianco), a CCIE-certified AI network engineer on Twitter.
+        _whoami = f"NetGeniusClaw (@{TWITTER_HANDLE})" if TWITTER_HANDLE else "NetGeniusClaw"
+        system_prompt = f"""You are {_whoami}, a CCIE-certified AI network engineer on Twitter.
 Generate a SHORT, contextual reply (under 250 chars to leave room for @mention and hashtag).
 
 CRITICAL RULES:
@@ -139,17 +148,16 @@ Examples of BAD generic replies (NEVER DO THIS):
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                "https://api.anthropic.com/v1/messages",
+                f"{MODEL_BASE_URL}/chat/completions",
                 headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
+                    "Authorization": f"Bearer {MODEL_API_KEY}",
                     "content-type": "application/json"
                 },
                 json={
-                    "model": "claude-sonnet-4-6",
+                    "model": MODEL_ID,
                     "max_tokens": 150,
-                    "system": system_prompt,
                     "messages": [
+                        {"role": "system", "content": system_prompt},
                         {
                             "role": "user",
                             "content": f"Tweet from @{author} (category: {category}):\n\n\"{tweet_text}\"\n\nGenerate a contextual reply:"
@@ -159,18 +167,17 @@ Examples of BAD generic replies (NEVER DO THIS):
             )
 
             if response.status_code != 200:
-                logger.error(f"Claude API error: {response.status_code} - {response.text}")
+                logger.error(f"Model API error: {response.status_code} - {response.text}")
                 return generate_basic_contextual_reply(author, tweet_text, category)
 
             result = response.json()
-            reply_content = ""
-            for block in result.get("content", []):
-                if block.get("type") == "text":
-                    reply_content += block.get("text", "")
+            reply_content = (
+                ((result.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+            )
 
             # Clean up and format
             reply_content = reply_content.strip()
-            # Remove any @username if Claude added it
+            # Remove any @username the model added
             if reply_content.startswith(f"@{author}"):
                 reply_content = reply_content[len(f"@{author}"):].strip()
 
@@ -196,7 +203,7 @@ Examples of BAD generic replies (NEVER DO THIS):
 
 def generate_basic_contextual_reply(author: str, tweet_text: str, category: str) -> str:
     """
-    Fallback: Generate a basic but still somewhat contextual reply without Claude.
+    Fallback: Generate a basic but still somewhat contextual reply without the model.
     At minimum, reference something specific from their tweet.
     """
     tweet_lower = tweet_text.lower()
@@ -2010,12 +2017,12 @@ async def handle_heartbeat_cycle(
                 mentions_skipped += 1
                 continue
 
-            # Generate a CONTEXTUAL reply using Claude - actually READ what they said!
+            # Generate a CONTEXTUAL reply using the model - actually READ what they said!
             category = mention.category.value if mention.category else "unknown"
             author = mention.author_handle or "user"
             tweet_text = mention.text
 
-            # Use Claude to generate a contextual reply
+            # Use the model to generate a contextual reply
             reply_text = await generate_contextual_reply(
                 author=author,
                 tweet_text=tweet_text,

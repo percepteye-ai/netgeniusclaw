@@ -56,7 +56,7 @@ Add to `config/openclaw.json` under `mcpServers`:
 
 ### 5. Verify the connection
 
-Once registered with an MCP client (Claude Desktop, OpenClaw, etc.):
+Once registered with an MCP client (the agent Desktop, OpenClaw, etc.):
 
 ```
 "Check Jenkins health and tell me who I'm authenticated as"

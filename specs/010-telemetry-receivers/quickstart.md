@@ -213,7 +213,7 @@ interface GigabitEthernet1/0/24
 end
 
 # Query received messages via MCP tool
-# (via Claude or direct tool call)
+# (via the agent or direct tool call)
 ```
 
 Expected: `%LINK-3-UPDOWN` and `%LINEPROTO-5-UPDOWN` messages received.
@@ -253,7 +253,7 @@ Expected: Flow records showing source/destination IPs, ports, bytes, and packets
 
 ---
 
-## Example Queries (via Claude/NetClaw)
+## Example Queries (via the agent/NetClaw)
 
 Once data is flowing, ask questions like:
 

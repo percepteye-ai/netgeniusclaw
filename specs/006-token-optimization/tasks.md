@@ -21,7 +21,7 @@
 
 - [x] T001 Create directory structure: src/netclaw_tokens/, tests/unit/, tests/integration/, workspace/skills/token-tracker/
 - [x] T002 Create src/netclaw_tokens/__init__.py with package exports (TokenCount, CostEstimate, TOONResponse, SessionLedger, ModelPricing, ToolUsageRecord dataclasses)
-- [x] T003 [P] Create requirements file or pyproject.toml entries for new dependencies: anthropic, toon-format
+- [x] T003 [P] Create requirements file or pyproject.toml entries for new dependencies: model-provider, toon-format
 
 ---
 
@@ -32,7 +32,7 @@
 **CRITICAL**: No user story work can begin until this phase is complete.
 
 - [x] T004 Implement cost_calculator.py in src/netclaw_tokens/cost_calculator.py with calculate_cost() and get_pricing() functions, hardcoded pricing dict (Opus $5/$25, Sonnet $3/$15, Haiku $1/$5 per 1M), NETCLAW_TOKEN_PRICING_OVERRIDE env var support, and 90% prompt caching discount
-- [x] T005 Implement counter.py in src/netclaw_tokens/counter.py with count_tokens() using anthropic.Anthropic().messages.count_tokens(), count_message_tokens() for message arrays, and len(text)/4 fallback with estimated=True when API unavailable
+- [x] T005 Implement counter.py in src/netclaw_tokens/counter.py with count_tokens() using model-provider.the model provider().messages.count_tokens(), count_message_tokens() for message arrays, and len(text)/4 fallback with estimated=True when API unavailable
 - [x] T006 [P] Implement toon_serializer.py in src/netclaw_tokens/toon_serializer.py with serialize_response() using toon.dumps(), JSON fallback on error, binary data detection (bytes/non-UTF-8 skip), and savings calculation (TOON vs JSON token counts)
 
 **Checkpoint**: Core library modules ready. All user story implementation can now begin.
@@ -145,14 +145,14 @@
 
 **Purpose**: Artifact coherence, documentation, configuration updates
 
-- [x] T044 [P] Create workspace/skills/token-tracker/SKILL.md with skill documentation: purpose (token counting and cost tracking), tools used (netclaw_tokens library), workflow steps, required env vars (ANTHROPIC_API_KEY, NETCLAW_TOKEN_PRICING_OVERRIDE), example usage
+- [x] T044 [P] Create workspace/skills/token-tracker/SKILL.md with skill documentation: purpose (token counting and cost tracking), tools used (netclaw_tokens library), workflow steps, required env vars (NETGENIUSCLAW_MODEL_API_KEY, NETCLAW_TOKEN_PRICING_OVERRIDE), example usage
 - [x] T045 [P] Update README.md with token optimization description, TOON format explanation, new dependency list, token footer examples
-- [x] T046 [P] Update scripts/install.sh to add pip install anthropic toon-format and src/netclaw_tokens setup
-- [x] T047 [P] Update .env.example to add NETCLAW_TOKEN_PRICING_OVERRIDE with description (ANTHROPIC_API_KEY already present)
+- [x] T046 [P] Update scripts/install.sh to add pip install model-provider toon-format and src/netclaw_tokens setup
+- [x] T047 [P] Update .env.example to add NETCLAW_TOKEN_PRICING_OVERRIDE with description (NETGENIUSCLAW_MODEL_API_KEY already present)
 - [x] T048 [P] Update TOOLS.md with token optimization infrastructure reference
 - [x] T049 [P] Update config/openclaw.json to register netclaw_tokens library path
 - [x] T050 [P] Update ui/netclaw-visual/server.js to add token tracking HUD node/panel for real-time token display
-- [x] T051 Run quickstart.md validation: code examples verified structurally (runtime validation requires anthropic and toon-format packages installed)
+- [x] T051 Run quickstart.md validation: code examples verified structurally (runtime validation requires model-provider and toon-format packages installed)
 
 ---
 

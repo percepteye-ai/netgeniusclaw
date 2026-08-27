@@ -6,13 +6,13 @@
 
 ## Architecture Principle
 
-Voice is just I/O. Claude already has ALL 40+ MCPs and 100+ skills. We're building:
+Voice is just I/O. the agent already has ALL 40+ MCPs and 100+ skills. We're building:
 1. Speech-to-text input
-2. Pass to Claude (who has all tools)
+2. Pass to the agent (who has all tools)
 3. Format response for speech
 4. Text-to-speech output
 
-**NOT building**: Per-MCP voice handlers. Claude handles tool selection.
+**NOT building**: Per-MCP voice handlers. the agent handles tool selection.
 
 ---
 
@@ -39,15 +39,15 @@ Voice is just I/O. Claude already has ALL 40+ MCPs and 100+ skills. We're buildi
 
 - [x] T006 Create ConversationContext dataclass in mcp-servers/twilio-voice-mcp/context_manager.py
 - [x] T007 Implement ContextManager with Memory MCP load/save per caller ID in mcp-servers/twilio-voice-mcp/context_manager.py
-- [x] T008 Implement context injection into Claude system prompt in mcp-servers/twilio-voice-mcp/context_manager.py
+- [x] T008 Implement context injection into the agent system prompt in mcp-servers/twilio-voice-mcp/context_manager.py
 
 ---
 
 ## Phase 4: Universal Voice Handler (4 tasks)
 
-**Goal**: Connect voice I/O to Claude with ALL tools
+**Goal**: Connect voice I/O to the agent with ALL tools
 
-- [x] T009 [US1] Extend webhook_server.py to pass transcribed speech to Claude with full MCP access in mcp-servers/twilio-voice-mcp/webhook_server.py
+- [x] T009 [US1] Extend webhook_server.py to pass transcribed speech to the agent with full MCP access in mcp-servers/twilio-voice-mcp/webhook_server.py
 - [x] T010 [US1] Integrate SpeechFormatter into response pipeline in mcp-servers/twilio-voice-mcp/webhook_server.py
 - [x] T011 [US1] Integrate ContextManager for per-caller state in mcp-servers/twilio-voice-mcp/webhook_server.py
 - [x] T012 [US1] Add call duration tracking (warn at 25min, disconnect at 30min) in mcp-servers/twilio-voice-mcp/webhook_server.py
@@ -92,7 +92,7 @@ Phase 6 (Docs)
 
 ## Why This Works
 
-Claude already knows how to:
+the agent already knows how to:
 - Query IP Fabric → just ask via voice
 - Open ServiceNow tickets → just ask via voice
 - Generate Blender diagrams → just ask via voice
@@ -101,4 +101,4 @@ Claude already knows how to:
 - Check Datadog alerts → just ask via voice
 - Everything else → just ask via voice
 
-We're not teaching Claude new tools. We're giving Claude ears and a mouth.
+We're not teaching the agent new tools. We're giving the agent ears and a mouth.

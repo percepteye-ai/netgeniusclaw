@@ -205,7 +205,7 @@ NetGeniusClaw already supports image attachments via messaging channels:
 ### Diagram Workflow
 
 1. IP Fabric MCP returns base64-encoded PNG
-2. Claude processes the image data
+2. the agent processes the image data
 3. For messaging channels: attach as file
 4. For CLI: save to workspace directory and provide path
 

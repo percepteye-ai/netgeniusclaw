@@ -89,7 +89,7 @@ description: "Task list for iN2N Production-Mode Enforcement & Durable Runtime (
 - [ ] T019 [US3] Route the member model turn through the DefenseClaw guard path in `mcp-servers/protocol-mcp/bgp/federation/gateway.py`. In production this guarding is **unconditional** — it MUST NOT consult OpenClaw's `security.mode` (reusing only the fail-closed *discipline* of `invocation.py::_defenseclaw_inspect`, not its `security.mode` early-return, which would bypass guarding under the default `hobby`). If `defenseclaw_available()` is false in production, fail closed (no unguarded provider fallback) — FR-009 (resolves I1).
 - [ ] T019a [US3] Assert `security.mode=defenseclaw` when a risk enters production, so the **Border's own** model turns (run via the OpenClaw gateway, not the member local path) are guarded. Implement in the production-mode entry path (daemon startup / risk mode set) in `mcp-servers/protocol-mcp/bgp/federation/controls.py` (`defenseclaw_available()` treats `security.mode != defenseclaw` as unavailable) and surface a clear posture message if it cannot be set (FR-007, resolves C1).
 
-**Checkpoint**: US3 independently testable — the "silent fallback to direct Anthropic" bug is corrected; production guards or refuses.
+**Checkpoint**: US3 independently testable — the "silent fallback to direct the model provider" bug is corrected; production guards or refuses.
 
 ---
 

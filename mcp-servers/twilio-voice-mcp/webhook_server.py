@@ -4,10 +4,10 @@ Twilio Voice Webhook Server - FULL UNIVERSAL VOICE INTEGRATION
 Feature 043: Full NetClaw Voice Integration
 
 HTTP server that handles inbound Twilio voice webhooks with FULL NetClaw integration.
-Uses Claude with tool calling to execute ANY NetClaw capability via voice.
+Uses the agent with tool calling to execute ANY NetGeniusClaw capability via voice.
 
-Voice is just I/O. Claude already has ALL 40+ MCPs and 100+ skills.
-Architecture: Phone → Twilio STT → Claude (ALL tools) → Speech Formatter → Twilio TTS
+Voice is just I/O. The agent already has ALL 40+ MCPs and 100+ skills.
+Architecture: Phone → Twilio STT → agent (ALL tools) → Speech Formatter → Twilio TTS
 
 Usage:
     python webhook_server.py
@@ -67,9 +67,28 @@ TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
 TWILIO_API_SECRET = os.environ.get("TWILIO_API_SECRET", "")
 WEBHOOK_PORT = int(os.environ.get("TWILIO_WEBHOOK_PORT", "5001"))
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+# The model endpoint. An OpenAI-compatible server you run -- vLLM, LM Studio,
+# SGLang -- not a hosted vendor. A hosted vendor's endpoint used to be hardcoded here.
+MODEL_BASE_URL = os.environ.get("NETGENIUSCLAW_MODEL_BASE_URL", "http://127.0.0.1:8000/v1").rstrip("/")
+MODEL_API_KEY = os.environ.get("NETGENIUSCLAW_MODEL_API_KEY", "vllm-local")
+MODEL_ID = os.environ.get("NETGENIUSCLAW_MODEL", "qwen/qwen3.5-4b")
 
-# OpenClaw Gateway - routes to Claude with ALL MCPs
+
+def _openai_tools(tools: list) -> list:
+    """Translate this file's tool declarations into the OpenAI tool schema.
+
+    The TOOLS literal below is left in its original {name, description,
+    input_schema} shape on purpose: it is the readable source of truth and
+    rewriting ninety lines of schema by hand is how a parameter quietly goes
+    missing. The translation happens here, once.
+    """
+    return [{"type": "function", "function": {
+        "name": tl["name"],
+        "description": tl.get("description", ""),
+        "parameters": tl.get("input_schema", {"type": "object", "properties": {}}),
+    }} for tl in tools]
+
+# OpenClaw Gateway - routes to the configured model with ALL MCPs
 OPENCLAW_GATEWAY_URL = os.environ.get("OPENCLAW_GATEWAY_URL", "http://localhost:18789")
 OPENCLAW_GATEWAY_TOKEN = os.environ.get("OPENCLAW_GATEWAY_TOKEN", "7cd7e3ad9acece055b438f97d0bf188c70a44397868832f9")
 
@@ -131,7 +150,7 @@ def _process_in_background(call_sid: str, user_message: str, caller_id: str) -> 
     """Background thread to process command and store result."""
     try:
         # Run the async processing in a new event loop
-        result = asyncio.run(process_with_claude_agent(user_message, caller_id=caller_id))
+        result = asyncio.run(process_with_agent(user_message, caller_id=caller_id))
 
         with _results_lock:
             if call_sid in _pending_results:
@@ -227,7 +246,7 @@ def validate_twilio_request(req):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Tool Definitions for Claude
+# Tool Definitions
 # ═══════════════════════════════════════════════════════════════════════════════
 
 TOOLS = [
@@ -624,7 +643,7 @@ async def tool_get_gns3_projects() -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Claude Agentic Processing
+# Agentic Processing
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -724,78 +743,81 @@ IMPORTANT VOICE RESPONSE RULES:
                 return content if content else "I processed your request but have no response."
             else:
                 logger.error(f"Gateway error: {response.status_code} - {response.text}")
-                return await process_with_claude_fallback(user_message, ctx)
+                return await process_with_model_fallback(user_message, ctx)
 
     except Exception as e:
         logger.error(f"Gateway connection error: {e}")
-        return await process_with_claude_fallback(user_message, ctx)
+        return await process_with_model_fallback(user_message, ctx)
 
 
-async def process_with_claude_fallback(user_message: str, ctx: ConversationContext = None) -> str:
-    """Fallback to direct Claude API with limited tools if gateway unavailable."""
-    if not ANTHROPIC_API_KEY:
+async def process_with_model_fallback(user_message: str, ctx: ConversationContext = None) -> str:
+    """Fallback to the model endpoint directly, with limited tools, if the gateway is down.
+
+    Speaks OpenAI chat-completions, which is what the local server serves. The
+    system prompt travels as the first message rather than a top-level field,
+    and tool results come back as role="tool" turns keyed by tool_call_id.
+    """
+    if not MODEL_API_KEY:
         return await process_basic_command(user_message)
 
     system_prompt = get_system_prompt(ctx) if ctx else SYSTEM_PROMPT_BASE
-    messages = [{"role": "user", "content": user_message}]
+    messages = [{"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}]
+    url = f"{MODEL_BASE_URL}/chat/completions"
+    headers = {"Authorization": f"Bearer {MODEL_API_KEY}", "content-type": "application/json"}
+    body = {"model": MODEL_ID, "max_tokens": 1024, "tools": _openai_tools(TOOLS)}
 
     try:
         async with httpx.AsyncClient(timeout=90.0) as client:
-            response = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json"
-                },
-                json={
-                    "model": "claude-sonnet-4-6",
-                    "max_tokens": 1024,
-                    "system": system_prompt,
-                    "tools": TOOLS,
-                    "messages": messages
-                }
-            )
-
+            response = await client.post(url, headers=headers, json={**body, "messages": messages})
             if response.status_code != 200:
                 return await process_basic_command(user_message)
-
             result = response.json()
 
-            # Handle tool use loop (limited tools only)
+            # Tool-use loop (limited tools only)
             max_iterations = 5
             iteration = 0
 
-            while result.get("stop_reason") == "tool_use" and iteration < max_iterations:
-                iteration += 1
-                tool_calls = [b for b in result.get("content", []) if b.get("type") == "tool_use"]
+            while iteration < max_iterations:
+                choice = (result.get("choices") or [{}])[0]
+                msg = choice.get("message") or {}
+                tool_calls = msg.get("tool_calls") or []
                 if not tool_calls:
                     break
+                iteration += 1
 
-                messages.append({"role": "assistant", "content": result.get("content", [])})
-                tool_results = []
+                # The assistant turn goes back VERBATIM: it carries the
+                # tool_call ids the next turn's results are keyed to, and a
+                # reconstructed one would break that join.
+                messages.append(msg)
                 for tc in tool_calls:
-                    tool_result = await execute_tool(tc.get("name"), tc.get("input", {}))
-                    tool_results.append({"type": "tool_result", "tool_use_id": tc.get("id"), "content": tool_result})
-                messages.append({"role": "user", "content": tool_results})
+                    fn = tc.get("function") or {}
+                    try:
+                        args = json.loads(fn.get("arguments") or "{}")
+                    except (ValueError, TypeError):
+                        # The model emitted arguments that are not JSON. Report
+                        # that to it as the tool result rather than crashing the
+                        # call -- it can correct on the next turn.
+                        args = {}
+                    tool_result = await execute_tool(fn.get("name"), args)
+                    messages.append({"role": "tool", "tool_call_id": tc.get("id"),
+                                     "content": tool_result})
 
-                response = await client.post(
-                    "https://api.anthropic.com/v1/messages",
-                    headers={"x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-                    json={"model": "claude-sonnet-4-6", "max_tokens": 1024, "system": system_prompt, "tools": TOOLS, "messages": messages}
-                )
+                response = await client.post(url, headers=headers,
+                                             json={**body, "messages": messages})
                 if response.status_code != 200:
                     break
                 result = response.json()
 
-            return "".join(b.get("text", "") for b in result.get("content", []) if b.get("type") == "text") or "Request processed."
+            final = ((result.get("choices") or [{}])[0].get("message") or {}).get("content")
+            return final or "Request processed."
 
     except Exception as e:
-        logger.error(f"Claude fallback error: {e}")
+        logger.error(f"Model fallback error: {e}")
         return await process_basic_command(user_message)
 
 
-async def process_with_claude_agent(
+async def process_with_agent(
     user_message: str,
     caller_id: str = None,
     ctx: ConversationContext = None
@@ -879,7 +901,7 @@ async def process_basic_command(command: str) -> str:
 def process_command_sync(user_message: str, caller_id: str = None) -> str:
     """Synchronous wrapper for command processing."""
     try:
-        return asyncio.run(process_with_claude_agent(user_message, caller_id=caller_id))
+        return asyncio.run(process_with_agent(user_message, caller_id=caller_id))
     except Exception as e:
         logger.error(f"Command sync error: {e}")
         return "I had trouble processing that request. Please try again."
@@ -1294,7 +1316,7 @@ def health_check():
         },
         "fallback_integrations": {
             "cml": bool(CML_API_URL),
-            "claude_direct": bool(ANTHROPIC_API_KEY),
+            "model_direct": bool(MODEL_API_KEY),
             "pagerduty": bool(PAGERDUTY_API_KEY),
             "gns3": bool(GNS3_URL)
         },
@@ -1322,7 +1344,7 @@ if __name__ == "__main__":
     logger.info(f"Webhook URL: http://0.0.0.0:{WEBHOOK_PORT}/webhooks/twilio/voice")
     logger.info("")
     logger.info("Integrations:")
-    logger.info(f"  Claude: {'Enabled (UNIVERSAL MCP ACCESS)' if ANTHROPIC_API_KEY else 'Disabled (basic fallback)'}")
+    logger.info(f"  Model: {MODEL_ID} at {MODEL_BASE_URL}" if MODEL_API_KEY else "  Model: not configured (basic fallback)")
     logger.info(f"  CML: {'Enabled' if CML_API_URL else 'Disabled'}")
     logger.info(f"  PagerDuty: {'Enabled' if PAGERDUTY_API_KEY else 'Disabled'}")
     logger.info(f"  GNS3: {'Enabled' if GNS3_URL else 'Disabled'}")
@@ -1331,7 +1353,7 @@ if __name__ == "__main__":
     logger.info(f"  Max call duration: {MAX_CALL_MINUTES} minutes")
     logger.info(f"  Warning at: {WARN_CALL_MINUTES} minutes")
     logger.info("")
-    logger.info("Voice is just I/O. Claude has access to ALL 40+ MCPs and 100+ skills.")
+    logger.info("Voice is just I/O. The agent has access to ALL 40+ MCPs and 100+ skills.")
     logger.info("=" * 70)
 
     app.run(host="0.0.0.0", port=WEBHOOK_PORT, debug=False)

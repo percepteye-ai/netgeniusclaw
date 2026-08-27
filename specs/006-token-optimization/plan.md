@@ -5,12 +5,12 @@
 
 ## Summary
 
-Add real-time token counting and cost tracking to every NetGeniusClaw interaction using Anthropic's `count_tokens()` API, plus TOON-format serialization for all MCP server responses to reduce token consumption by 40-60%. This is implemented as a shared Python library (`src/netclaw_tokens/`) consumed by all bundled MCP servers, with identity updates to SOUL.md and HEARTBEAT.md making token transparency a mandatory agent behavior.
+Add real-time token counting and cost tracking to every NetGeniusClaw interaction using the model provider's `count_tokens()` API, plus TOON-format serialization for all MCP server responses to reduce token consumption by 40-60%. This is implemented as a shared Python library (`src/netclaw_tokens/`) consumed by all bundled MCP servers, with identity updates to SOUL.md and HEARTBEAT.md making token transparency a mandatory agent behavior.
 
 ## Technical Context
 
 **Language/Version**: Python 3.10+
-**Primary Dependencies**: anthropic (SDK with count_tokens), toon-format (TOON serialization), FastMCP (existing MCP framework)
+**Primary Dependencies**: model-provider (SDK with count_tokens), toon-format (TOON serialization), FastMCP (existing MCP framework)
 **Storage**: N/A (in-memory session ledger; no persistent storage)
 **Testing**: pytest
 **Target Platform**: Linux/macOS server (same as existing NetGeniusClaw)
@@ -33,7 +33,7 @@ Add real-time token counting and cost tracking to every NetGeniusClaw interactio
 | VI. Multi-Vendor Neutrality | PASS | Vendor-agnostic shared library |
 | VII. Skill Modularity | PASS | Single-purpose token-tracker skill |
 | VIII. Verify After Change | PASS | Each MCP server update verified by test |
-| IX. Security by Default | PASS | ANTHROPIC_API_KEY read from env var (FR-016) |
+| IX. Security by Default | PASS | NETGENIUSCLAW_MODEL_API_KEY read from env var (FR-016) |
 | X. Observability | PASS | Token metrics are observability data |
 | XI. Artifact Coherence | PENDING | All artifacts listed in spec SC-007 will be updated |
 | XII. Documentation-as-Code | PENDING | SKILL.md, README updates planned |
@@ -64,7 +64,7 @@ specs/006-token-optimization/
 src/
 └── netclaw_tokens/
     ├── __init__.py
-    ├── counter.py           # Token counting via Anthropic API + local fallback
+    ├── counter.py           # Token counting via the model endpoint + local fallback
     ├── toon_serializer.py   # TOON serialization with JSON fallback
     ├── cost_calculator.py   # Model-aware pricing calculator
     ├── session_ledger.py    # Cumulative session tracking with per-tool breakdown

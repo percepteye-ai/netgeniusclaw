@@ -302,14 +302,14 @@ class ContextManager:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# T008: Context Injection into Claude System Prompt
+# T008: Context Injection into the agent System Prompt
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def build_context_prompt(ctx: ConversationContext) -> str:
     """
-    Build a context section for injection into Claude's system prompt.
+    Build a context section for injection into the agent's system prompt.
 
-    This enables Claude to:
+    This enables the agent to:
     - Address the user by name
     - Resolve pronouns ("it", "that lab", etc.)
     - Reference previous conversation topics
@@ -380,7 +380,7 @@ def build_context_prompt(ctx: ConversationContext) -> str:
 
 def inject_context_into_prompt(base_prompt: str, ctx: ConversationContext) -> str:
     """
-    Inject conversation context into Claude's system prompt.
+    Inject conversation context into the agent's system prompt.
 
     Args:
         base_prompt: The base system prompt
@@ -401,12 +401,12 @@ def inject_context_into_prompt(base_prompt: str, ctx: ConversationContext) -> st
 
 def extract_entity_from_response(response: str, ctx: ConversationContext) -> None:
     """
-    Extract and track entity references from Claude's response.
+    Extract and track entity references from the agent's response.
 
     Updates the context with any devices, labs, or incidents mentioned.
 
     Args:
-        response: Claude's response text
+        response: the agent's response text
         ctx: ConversationContext to update
     """
     import re

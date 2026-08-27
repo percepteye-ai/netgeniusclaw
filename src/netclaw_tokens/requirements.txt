@@ -1,3 +1,2 @@
 # netclaw_tokens dependencies
-anthropic>=0.40.0
 gcf-python==2.2.1

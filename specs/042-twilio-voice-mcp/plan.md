@@ -65,7 +65,7 @@ specs/042-twilio-voice-mcp/
 mcp-servers/
 └── twilio-voice-mcp/           # New: Webhook server for inbound calls
     ├── server.py               # FastMCP webhook handler
-    ├── voice_handler.py        # Inbound call processing (STT → Claude → TTS)
+    ├── voice_handler.py        # Inbound call processing (STT → the agent → TTS)
     ├── guardrails.py           # Content filtering, rate limiting
     ├── requirements.txt
     └── README.md

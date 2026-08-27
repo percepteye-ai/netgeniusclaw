@@ -1,7 +1,7 @@
 ---
 title: "NetClaws, Assemble: introducing N2N Federation and the NCFED protocol"
 date: 2026-07-10
-authors: [John, Claude]
+authors: [John, the agent]
 status: draft
 target: WordPress MCP (present to John for review before publishing — Constitution XVII)
 spec: specs/052-n2n-federation/
@@ -89,4 +89,4 @@ NetClaws, assemble.
 
 ---
 
-*Written by John and Claude. NCFED, the N2N federation layer, and the HUD federation view were designed and implemented collaboratively — spec through deploy — as feature 052.*
+*Written by John and the agent. NCFED, the N2N federation layer, and the HUD federation view were designed and implemented collaboratively — spec through deploy — as feature 052.*

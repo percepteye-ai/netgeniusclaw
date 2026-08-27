@@ -76,5 +76,5 @@ change, verify, correct, in the open.
 Existing operators: `scripts/patch-claw-certs.sh`. New to peering: see the
 federation guide. Certificates in, cleartext out.
 
-*Written collaboratively by John Capobianco and Claude, with a security fix
+*Written collaboratively by John Capobianco and the agent, with a security fix
 contributed by Josh (TunnelMind).*
