@@ -34,9 +34,17 @@ docker network create --ipv4=false --ipv6 --subnet fd00:dc:ee::/64 --gateway fd0
 
 ```bash
 docker compose up -d
-sleep 15                        # OSPFv3 + BGP convergence
+sleep 30                        # OSPFv3 SPF, then iBGP over the loopbacks
 bash scripts/verify.sh
 ```
+
+**Give it the full 30 seconds.** Convergence has two stages and the second is
+the slow one: OSPFv3 adjacencies reach `Full` within about 15s, but iBGP peers
+loopback-to-loopback (`update-source lo`), so no BGP session can come up until
+OSPFv3 has run SPF and *installed* the loopback routes. Verifying in between
+gives you Full adjacencies alongside a wall of BGP failures — measured here at
+15s on Apple Silicon, where the amd64 image runs emulated and everything is
+slower. At 30s all checks passed.
 
 ## Verify by hand
 
@@ -54,6 +62,10 @@ docker exec netclaw-edge1 vtysh -c "show bgp ipv6 unicast summary"
 docker exec netclaw-edge1 vtysh -c "show bgp ipv6 unicast" | grep fd00:dead:beef::/48
 docker exec netclaw-edge1 ip -6 route show
 ```
+
+Every `vtysh` call prints `Can't open configuration file /etc/frr/vtysh.conf`.
+It is harmless — only `frr.conf` and `daemons` are mounted — and the command's
+output follows it as normal.
 
 ## Peering the host with the lab (optional)
 
