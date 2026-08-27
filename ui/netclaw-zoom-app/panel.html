@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NetGeniusClaw</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- External stylesheet, not inline: Zoom's own client-side CSP layer
+     (separate from this server's Content-Security-Policy header) blocks
+     inline <style> outright — confirmed live 2026-08-19 via the panel's
+     own devtools console: "Zoom App: Content Security Policy Violation...
+     inline violated the style-src-elem directive". -->
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <div id="avatar">🦞</div>
+  <div id="status">Connecting…</div>
+  <div id="topic"></div>
+  <div id="result"></div>
+  <button id="overlay-toggle">Enable camera overlay</button>
+
+  <!-- Zoom Apps SDK — provided by the Zoom client's in-app browser; see
+       https://developers.zoom.us/docs/zoom-apps/ for the real bundle. -->
+  <script src="https://appssdk.zoom.us/sdk.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+# Tasks: Jenkins MCP Server Integration
+
+**Input**: Design documents from `/specs/007-jenkins-mcp-server/`
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/mcp-tools.md, quickstart.md
+
+**Tests**: Not explicitly requested in the feature specification. Test tasks are omitted.
+
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story. This is a configuration integration — no MCP server code is authored by netclaw. The Jenkins MCP Server plugin runs natively inside Jenkins and exposes 16 tools via Streamable HTTP transport. Tasks focus on registration, documentation, skill authoring, and artifact coherence.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- Include exact file paths in descriptions
+
+---
+
+## Phase 1: Setup (Shared Infrastructure)
+
+**Purpose**: Directory structure creation and MCP server registration
+
+- [x] T001 Create MCP server directory: `mcp-servers/jenkins-mcp/`
+- [x] T002 [P] Create skill directory: `workspace/skills/jenkins-cicd/`
+- [x] T003 [P] Register jenkins-mcp server in `config/openclaw.json` under mcpServers as a remote HTTP MCP server with url: `${JENKINS_URL}/mcp-server/mcp`, headers: `Authorization: Basic ${JENKINS_AUTH_BASE64}` (per research.md R4 registration format)
+
+---
+
+## Phase 2: Foundational (Blocking Prerequisites)
+
+**Purpose**: MCP server README that documents the Jenkins plugin, its 16 tools, authentication, and setup
+
+**CRITICAL**: No user story skill work can begin until the MCP server documentation is in place
+
+- [x] T004 Create MCP server README in `mcp-servers/jenkins-mcp/README.md` with: server overview (official Jenkins MCP Server plugin v0.158+, Java, MIT license, 16 tools), transport protocol (Streamable HTTP at `/mcp-server/mcp`), environment variables table (JENKINS_URL, JENKINS_USERNAME, JENKINS_API_TOKEN, JENKINS_AUTH_BASE64), authentication instructions (HTTP Basic Auth with Base64-encoded username:api_token), prerequisite Jenkins version (2.533+) and plugin installation instructions, tool inventory by category (Job Management: getJob, getJobs, triggerBuild, getQueueItem; Build Operations: getBuild, updateBuild, getBuildLog, searchBuildLog; SCM Integration: getJobScm, getBuildScm, getBuildChangeSets, findJobsWithScmUrl; System: whoAmI, getStatus; Pipeline: getPipelineRuns, getPipelineRunLog), and example usage
+- [ ] T005 [P] Update `.env.example` with new environment variables: JENKINS_URL, JENKINS_USERNAME, JENKINS_API_TOKEN, JENKINS_AUTH_BASE64 (with descriptions, no values, including note that JENKINS_AUTH_BASE64 is base64 of username:api_token)
+
+**Checkpoint**: Foundation ready — MCP server documented and registered. Skill authoring can begin.
+
+---
+
+## Phase 3: User Story 1 — Monitor Pipeline and Build Status (Priority: P1) MVP
+
+**Goal**: Skill workflow for listing Jenkins jobs, checking build status, and monitoring queue items using getJob, getJobs, getBuild, getQueueItem, getPipelineRuns tools.
+
+**Independent Test**: Ask "show me all Jenkins jobs" or "what is the status of the last build for job deploy-network-config" and verify the skill invokes getJobs/getBuild and returns accurate status information.
+
+### Implementation for User Story 1
+
+- [ ] T006 [US1] Create skill documentation in `workspace/skills/jenkins-cicd/SKILL.md` with YAML front matter (name: jenkins-cicd, description, mcp_servers: [jenkins-mcp], tools_used listing). Include Purpose section describing CI/CD pipeline management for network automation. Start with monitoring workflows.
+- [ ] T007 [US1] Add pipeline monitoring workflow section to `workspace/skills/jenkins-cicd/SKILL.md`: step-by-step workflow for (1) listing all jobs via getJobs with pagination and regex filtering, (2) retrieving specific job details via getJob including folder paths, (3) retrieving latest build details via getBuild with result/duration/timestamp, (4) checking queue status via getQueueItem for pending builds, (5) viewing pipeline run history via getPipelineRuns. Include example natural language prompts and expected tool invocations.
+- [ ] T008 [US1] Add GAIT audit logging section to `workspace/skills/jenkins-cicd/SKILL.md`: document that all Jenkins interactions must be logged to GAIT audit trail via gait_mcp tools at skill invocation level (per research.md R7). Include logging pattern: log tool name, parameters, and result summary for each operation.
+
+**Checkpoint**: User Story 1 complete. Skill documents Jenkins monitoring workflows with GAIT logging.
+
+---
+
+## Phase 4: User Story 2 — Trigger and Track Builds (Priority: P2)
+
+**Goal**: Extend skill with build triggering workflows using triggerBuild, getQueueItem, getBuild, updateBuild tools. All write operations gated by human-in-the-loop (Constitution XIV).
+
+**Independent Test**: Ask "trigger build for job deploy-network-config with parameter BRANCH=main" and verify the skill documents the confirmation step before invoking triggerBuild, then tracks via getQueueItem/getBuild.
+
+### Implementation for User Story 2
+
+- [ ] T009 [US2] Add build triggering workflow section to `workspace/skills/jenkins-cicd/SKILL.md`: step-by-step workflow for (1) checking job exists and parameter definitions via getJob before triggering, (2) presenting build parameters to operator for confirmation (Constitution XIV human-in-the-loop), (3) triggering build via triggerBuild with parameters, (4) tracking queue item via getQueueItem until build starts, (5) monitoring build progress via getBuild until completion, (6) updating build metadata via updateBuild (display name, keep flag) with confirmation. Emphasize read-before-write pattern (Constitution II) and include parameter type handling (String, Boolean, Choice, Text).
+
+**Checkpoint**: User Story 2 complete. Skill documents build triggering with safety gates.
+
+---
+
+## Phase 5: User Story 3 — Analyze Build Logs (Priority: P3)
+
+**Goal**: Extend skill with build log retrieval and search workflows using getBuildLog, searchBuildLog, getPipelineRunLog tools.
+
+**Independent Test**: Ask "show me the build log for job deploy-network-config build #42" or "search the build log for 'ERROR'" and verify the skill invokes appropriate log tools.
+
+### Implementation for User Story 3
+
+- [ ] T010 [US3] Add build log analysis workflow section to `workspace/skills/jenkins-cicd/SKILL.md`: step-by-step workflow for (1) retrieving build log via getBuildLog with pagination (start offset for large logs), (2) searching build log via searchBuildLog with regex patterns for error/failure diagnosis, (3) retrieving pipeline-specific logs via getPipelineRunLog. Include example prompts for troubleshooting workflows: "show me the last 100 lines", "search for ERROR", "find timeout messages". Document handling of large logs with pagination guidance.
+
+**Checkpoint**: User Story 3 complete. Skill documents log analysis and search workflows.
+
+---
+
+## Phase 6: User Story 4 — Track Source Code Changes (Priority: P4)
+
+**Goal**: Extend skill with SCM tracking workflows using getJobScm, getBuildScm, getBuildChangeSets, findJobsWithScmUrl tools.
+
+**Independent Test**: Ask "show me the changes in build #42 of job deploy-network-config" and verify the skill invokes getBuildChangeSets and returns commit data.
+
+### Implementation for User Story 4
+
+- [ ] T011 [US4] Add SCM tracking workflow section to `workspace/skills/jenkins-cicd/SKILL.md`: step-by-step workflow for (1) retrieving job SCM configuration via getJobScm (repo URL, branches, polling), (2) retrieving build SCM details via getBuildScm (revision info), (3) listing change sets (commits) for a build via getBuildChangeSets with author/message/files, (4) finding all jobs using a specific repository via findJobsWithScmUrl. Include example prompts for change correlation workflows.
+
+**Checkpoint**: User Story 4 complete. Skill documents SCM change tracking.
+
+---
+
+## Phase 7: User Story 5 — Verify Jenkins Health and Identity (Priority: P5)
+
+**Goal**: Extend skill with health check and identity verification workflows using whoAmI and getStatus tools.
+
+**Independent Test**: Ask "check Jenkins health" or "who am I on Jenkins" and verify the skill invokes whoAmI/getStatus.
+
+### Implementation for User Story 5
+
+- [ ] T012 [US5] Add health check and setup verification section to `workspace/skills/jenkins-cicd/SKILL.md`: step-by-step workflow for (1) verifying connection and authentication via whoAmI (returns user name, permissions), (2) checking Jenkins instance health via getStatus (instance mode, version, quieting down status). Position as a pre-flight check recommended before first use and as a diagnostic tool when other operations fail.
+
+**Checkpoint**: All user stories complete. Skill fully documents Jenkins CI/CD workflows.
+
+---
+
+## Phase 8: Polish & Artifact Coherence
+
+**Purpose**: Artifact coherence checklist completion (Constitution XI) and cross-cutting documentation updates
+
+- [ ] T013 [P] Update `TOOLS.md` with Jenkins MCP server entry: server name (jenkins-mcp), 16 tools across categories (Job Management, Build Operations, SCM Integration, System, Pipeline), brief descriptions
+- [ ] T014 [P] Update `SOUL.md` with jenkins-cicd skill definition and Jenkins MCP server capability summary
+- [ ] T015 [P] Update `README.md` with Jenkins MCP server description, updated tool/skill counts, and architecture reference (noting remote HTTP transport vs stdio)
+- [ ] T016 [P] Update `scripts/install.sh` with Jenkins MCP server prerequisite note (Jenkins 2.533+ with MCP Server plugin v0.158+ required — no local dependencies to install, remote server)
+- [ ] T017 [P] Update `ui/netclaw-visual/` Three.js HUD with new Jenkins MCP server node representing the CI/CD integration
+- [ ] T018 Validate quickstart.md instructions by reviewing server connectivity and tool invocation flows in `specs/007-jenkins-mcp-server/quickstart.md`
+- [ ] T019 Verify backwards compatibility — confirm all existing MCP servers and skills remain functional after additions (Constitution XV, FR-015)
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: No dependencies — can start immediately
+- **Foundational (Phase 2)**: Depends on Setup completion — BLOCKS all user stories
+- **User Stories (Phases 3-7)**: All depend on Foundational phase completion
+  - US1 (Phase 3): No dependencies on other stories — MVP target
+  - US2 (Phase 4): Depends on US1 (builds on monitoring to add triggering)
+  - US3 (Phase 5): Depends on US1 (builds on build identification to add log analysis)
+  - US4 (Phase 6): Independent of US2/US3 (different tool category — SCM)
+  - US5 (Phase 7): Independent of US2-US4 (standalone health/identity checks)
+- **Polish (Phase 8)**: Depends on all user stories being complete
+
+### User Story Dependencies
+
+- **US1 (P1)**: Foundational only. MVP target.
+- **US2 (P2)**: Depends on US1 (extends monitoring with build triggering workflow).
+- **US3 (P3)**: Depends on US1 (extends build visibility with log analysis).
+- **US4 (P4)**: Foundational only. Can run in parallel with US1.
+- **US5 (P5)**: Foundational only. Can run in parallel with US1.
+
+### Within Each User Story
+
+- Read existing skill content before extending
+- Core workflow documentation before edge case handling
+- Story complete before moving to next priority
+
+### Parallel Opportunities
+
+- T001, T002, T003 (Setup) can all run in parallel
+- T004 and T005 (Foundational) can run in parallel
+- US4 and US5 can run in parallel with US1 after Foundational
+- All Phase 8 tasks marked [P] can run in parallel
+
+---
+
+## Parallel Example: Phase 1 (Setup)
+
+```bash
+# All setup tasks are independent:
+Task: "T001 Create mcp-servers/jenkins-mcp/ directory"
+Task: "T002 Create workspace/skills/jenkins-cicd/ directory"
+Task: "T003 Register jenkins-mcp in config/openclaw.json"
+```
+
+## Parallel Example: Phase 8 (Polish)
+
+```bash
+# All documentation updates can run in parallel:
+Task: "T013 Update TOOLS.md"
+Task: "T014 Update SOUL.md"
+Task: "T015 Update README.md"
+Task: "T016 Update scripts/install.sh"
+Task: "T017 Update ui/netclaw-visual/ HUD"
+```
+
+---
+
+## Implementation Strategy
+
+### MVP First (User Story 1 Only)
+
+1. Complete Phase 1: Setup (T001-T003)
+2. Complete Phase 2: Foundational (T004-T005)
+3. Complete Phase 3: User Story 1 (T006-T008)
+4. **STOP and VALIDATE**: Verify skill documentation covers pipeline monitoring with GAIT logging
+5. Deploy/demo if ready
+
+### Incremental Delivery
+
+1. Setup + Foundational → Foundation ready (registration + README)
+2. Add US1 (Pipeline monitoring) → Test → MVP!
+3. Add US2 (Build triggering) → Test → Active CI/CD management
+4. Add US3 (Log analysis) → Test → Troubleshooting capability
+5. Add US4 (SCM tracking) → Test → Change correlation
+6. Add US5 (Health/identity) → Test → Operational hygiene
+7. Phase 8 (Polish + Artifact Coherence) → Feature complete
+
+### Suggested MVP Scope
+
+User Story 1 (Monitor Pipeline and Build Status) is the MVP. It delivers foundational Jenkins visibility — the starting point for all CI/CD workflows. After US1 is validated, each additional story adds independent value.
+
+---
+
+## Notes
+
+- [P] tasks = different files, no dependencies
+- [Story] label maps task to specific user story for traceability
+- This is a configuration integration — no server.py or Python code is authored by netclaw
+- The Jenkins MCP Server plugin handles all tool implementation inside Jenkins
+- Jenkins uses remote HTTP transport (Streamable HTTP) unlike most netclaw MCP servers which use local stdio
+- GAIT audit logging is coordinated at skill level via gait_mcp tools, not embedded in the MCP server
+- Write operations (triggerBuild, updateBuild) require human-in-the-loop confirmation (Constitution XIV)
+- Jenkins folder paths are supported in job names (e.g., "folder1/folder2/job-name")

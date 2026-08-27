@@ -1,0 +1,165 @@
+/* diff-view.css — Styles for configuration/route/ACL diff visualization */
+
+.diff-view {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.diff-view__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #F5F5F5;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.diff-view__device {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.diff-view__type {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #E3F2FD;
+  color: #1565C0;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.diff-view__labels {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+  font-size: 12px;
+  color: #757575;
+}
+
+.diff-view__label-before {
+  color: #C62828;
+}
+
+.diff-view__label-after {
+  color: #2E7D32;
+}
+
+/* Hunk sections */
+.diff-view__content {
+  max-height: 600px;
+  overflow-y: auto;
+  background: #FFFFFF;
+}
+
+.diff-hunk {
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.diff-hunk:last-child {
+  border-bottom: none;
+}
+
+.diff-hunk__header {
+  padding: 4px 16px;
+  background: #F0F0F0;
+  color: #757575;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  border-top: 1px solid #E0E0E0;
+}
+
+/* Diff lines */
+.diff-line {
+  display: flex;
+  padding: 1px 0;
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.diff-line__number {
+  flex-shrink: 0;
+  width: 50px;
+  padding: 0 8px;
+  text-align: right;
+  color: #9E9E9E;
+  user-select: none;
+  background: rgba(0, 0, 0, 0.02);
+  border-right: 1px solid #E0E0E0;
+}
+
+.diff-line__indicator {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  font-weight: 600;
+  user-select: none;
+}
+
+.diff-line__content {
+  flex: 1;
+  padding: 0 8px;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Line type coloring */
+.diff-line--added {
+  background: #E8F5E9;
+}
+
+.diff-line--added .diff-line__indicator {
+  color: #2E7D32;
+}
+
+.diff-line--added .diff-line__indicator::before {
+  content: "+";
+}
+
+.diff-line--added .diff-line__number {
+  background: rgba(46, 125, 50, 0.08);
+}
+
+.diff-line--removed {
+  background: #FFEBEE;
+}
+
+.diff-line--removed .diff-line__indicator {
+  color: #C62828;
+}
+
+.diff-line--removed .diff-line__indicator::before {
+  content: "-";
+}
+
+.diff-line--removed .diff-line__number {
+  background: rgba(198, 40, 40, 0.08);
+}
+
+.diff-line--context {
+  background: #FFFFFF;
+}
+
+.diff-line--context .diff-line__indicator {
+  color: #E0E0E0;
+}
+
+.diff-line--context .diff-line__indicator::before {
+  content: " ";
+}
+
+/* No changes state */
+.diff-view__no-changes {
+  text-align: center;
+  padding: 40px 16px;
+  color: #2E7D32;
+  font-size: 16px;
+  font-weight: 500;
+}

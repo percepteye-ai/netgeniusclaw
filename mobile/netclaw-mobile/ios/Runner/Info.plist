@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>NetClaw</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>netclaw_mobile</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>UIApplicationSceneManifest</key>
+		<dict>
+			<key>UIApplicationSupportsMultipleScenes</key>
+			<false/>
+			<key>UISceneConfigurations</key>
+			<dict>
+				<key>UIWindowSceneSessionRoleApplication</key>
+				<array>
+					<dict>
+						<key>UISceneClassName</key>
+						<string>UIWindowScene</string>
+						<key>UISceneConfigurationName</key>
+						<string>flutter</string>
+						<key>UISceneDelegateClassName</key>
+						<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+						<key>UISceneStoryboardFile</key>
+						<string>Main</string>
+					</dict>
+				</array>
+			</dict>
+		</dict>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<!-- feature 066: mobile_scanner (QR enrollment + device scan); feature 068,
+	     US2/US3: camera package (photo/video capture) shares this same key -->
+		<key>NSCameraUsageDescription</key>
+		<string>NetClaw Mobile uses the camera to scan QR codes and to capture photos/video for your Border.</string>
+		<!-- feature 067, US4: speech_to_text on-device voice-to-text; feature 068,
+	     US2/US3: camera package's audio track for video capture shares this key -->
+		<key>NSMicrophoneUsageDescription</key>
+		<string>NetClaw Mobile uses the microphone to record voice requests and audio/video captures for your Border.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>NetClaw Mobile transcribes your voice requests on-device before sending them.</string>
+		<!-- feature 068, US1: local_auth Face ID (Touch ID/Android BiometricPrompt need no key) -->
+		<key>NSFaceIDUsageDescription</key>
+		<string>NetClaw Mobile uses Face ID to confirm approval decisions before sending them to your Border.</string>
+		<!-- 099/FR-017 (Story 7): required for the app to start an
+	     ActivityKit Live Activity (LiveActivityWidget extension) showing
+	     pending-approval status on the Lock Screen. -->
+		<key>NSSupportsLiveActivities</key>
+		<true/>
+		<!-- 099/FR-004 (Story 2): the edge connection (066/067) dials
+	     wss://<clawDomain>:<port> for the enrolled Border, which is
+	     routinely a private/local-network address (home or office
+	     deployment) -- iOS's Local Network privacy prompt covers any
+	     connection into a local/private address range, not just Bonjour
+	     discovery, and this app has no Bonjour/mDNS service discovery of
+	     its own to declare (confirmed by inspection: no NSNetService/
+	     multicast_dns usage anywhere in lib/ncfed/), so no
+	     NSBonjourServices key is needed alongside this one. -->
+		<key>NSLocalNetworkUsageDescription</key>
+		<string>NetClaw Mobile connects to your Border, which is often on your local network, to send and receive messages and approvals.</string>
+		<!-- feature 067, US5: netclaw://device/<id> device-status deep link -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>ca.automateyournetwork.netclaw.mobile</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>netclaw</string>
+				</array>
+			</dict>
+		</array>
+		<key>UIStatusBarHidden</key>
+		<false/>
+		<!-- 099/FR-005 (Story 2): the app uses only standard TLS (wss://
+	     edge connection, 060/066's X.509/TLS transport) with no custom
+	     encryption implementation of its own -- exempt under Category 5
+	     Part 2 of the U.S. EAR, so this is false (does NOT use non-exempt
+	     encryption), which skips App Store Connect's export-compliance
+	     prompt on every future upload. -->
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
+		<!-- 099/FR-008 (Story 3), staged ahead of the paid Apple Developer
+	     account per Runner.entitlements' own step 2 -- safe to declare now
+	     since a background mode is a plain Info.plist declaration, not a
+	     signing capability; it's inert until CODE_SIGN_ENTITLEMENTS is
+	     wired (see Runner.entitlements and docs/MOBILE-RELEASE.md). -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+			<string>fetch</string>
+		</array>
+		<!-- 103/FR-013 (US3): BGAppRefreshTask identifier for opportunistic
+	     background drain-and-notify. Must match the string registered in
+	     AppDelegate.swift's BGTaskScheduler.shared.register(forTaskWithIdentifier:)
+	     exactly, or the OS silently refuses to run the task. -->
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>ca.automateyournetwork.netclaw.mobile.refresh</string>
+		</array>
+	</dict>
+</plist>

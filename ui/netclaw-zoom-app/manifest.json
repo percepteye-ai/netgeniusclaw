@@ -1,0 +1,131 @@
+{
+  "app_id": "Xp5IZzIRTtqq0rf5QbJUQ",
+  "display_information": {
+    "display_name": "NetClaw"
+  },
+  "oauth_information": {
+    "usage": "USER_OPERATION",
+    "development_redirect_uri": "https://zoom.automateyournetwork.ca/oauth/callback",
+    "production_redirect_uri": "https://zoom.automateyournetwork.ca/oauth/callback",
+    "oauth_allow_list": [
+      "https://zoom.automateyournetwork.ca/oauth/callback",
+      "https://zoom.automateyournetwork.ca"
+    ],
+    "strict_mode": false,
+    "subdomain_strict_mode": false,
+    "scopes": [
+      {
+        "scope": "meeting:read:meeting",
+        "optional": false,
+        "description": "Used to read basic meeting metadata (meeting UUID, topic, participant list) to associate live data and investigation results with the correct meeting session. Held in memory only for the duration of the active meeting; discarded when the meeting ends. Not persisted to any database."
+      },
+      {
+        "scope": "meeting:read:meeting_transcript",
+        "optional": false,
+        "description": "Used to receive live meeting transcript content via Realtime Media Streams, to recognize network-investigation questions as they're asked. Retained only in a bounded, in-memory rolling buffer of recent minutes; discarded when the meeting ends or listening is disabled. Never written to disk."
+      },
+      {
+        "scope": "meeting:read:meeting_chat",
+        "optional": false,
+        "description": "Used to receive live in-meeting chat messages via Realtime Media Streams, so chat-typed questions are recognized identically to spoken ones. Retained only in the same bounded, in-memory rolling buffer as transcript entries; discarded when the meeting ends or listening is disabled. Never written to disk."
+      },
+      {
+        "scope": "rtms:read:rtms_started",
+        "optional": false,
+        "description": "Used to be notified when a meeting's Realtime Media Stream begins, so NetClaw can start listening to that meeting's live transcript/chat/context signals. Grants no meeting content access by itself. Nothing is stored beyond an in-memory flag for the active session."
+      },
+      {
+        "scope": "rtms:read:rtms_stopped",
+        "optional": false,
+        "description": "Used to be notified when a meeting's Realtime Media Stream ends, so NetClaw stops listening and discards its in-memory live-context buffer for that meeting immediately. Not stored persistently."
+      },
+      {
+        "scope": "user:read:user",
+        "optional": false,
+        "description": "Used to identify which participant asked a question or is viewing the shared panel, and to display their name alongside investigation results. Not stored beyond the lifetime of the in-memory meeting session."
+      },
+      {
+        "scope": "zoomapp:inmeeting",
+        "optional": false,
+        "description": "Enables the NetClaw side panel to run inside the Zoom meeting client, showing live listening status, an avatar reflecting current activity, and investigation results. Does not itself grant access to meeting content. No data stored persistently by this scope."
+      },
+      {
+        "scope": "meeting:write:open_app",
+        "optional": false,
+        "description": "Used to automatically open the NetClaw app panel for participants when meeting listening is enabled. Does not read or modify meeting content \u2014 only controls whether the app surface opens."
+      }
+    ]
+  },
+  "features": {
+    "products": [
+      "ZOOM_MEETING"
+    ],
+    "development_home_uri": "https://zoom.automateyournetwork.ca/panel/?accountId={accountId}&runningContext={runningContext}&action={action}",
+    "production_home_uri": "https://zoom.automateyournetwork.ca",
+    "domain_allow_list": [
+      {
+        "domain": "zoom.automateyournetwork.ca",
+        "explanation": "Permanent production host for the NetClaw Zoom App panel, OAuth callback, and RTMS webhook"
+      }
+    ],
+    "in_client_feature": {
+      "guest_mode": {
+        "enable": true,
+        "enable_test_guest_mode": true
+      },
+      "collaborate_mode": {
+        "enable": true,
+        "enable_screen_sharing": false,
+        "enable_play_together": false,
+        "enable_start_immediately": false,
+        "enable_join_immediately": true
+      },
+      "in_client_oauth": {
+        "enable": false
+      },
+      "zoom_app_api": {
+        "enable": false,
+        "zoom_app_apis": []
+      }
+    },
+    "zoom_client_support": {
+      "mobile": {
+        "enable": true
+      },
+      "zoom_room": {
+        "enable": false
+      },
+      "pwa_client": {
+        "enable": false
+      }
+    },
+    "embed": {
+      "meeting_sdk": {
+        "enable": false,
+        "enable_device": false,
+        "devices": []
+      },
+      "contact_center_sdk": {
+        "enable": false
+      },
+      "phone_sdk": {
+        "enable": false
+      }
+    },
+    "event_subscription": {
+      "enable": true,
+      "events": [
+        {
+          "subscription_id": "",
+          "subscription_name": "NetClaw RTMS lifecycle",
+          "event_types": [
+            "meeting.rtms_started",
+            "meeting.rtms_stopped"
+          ],
+          "development_webhook_url": "https://zoom.automateyournetwork.ca/webhooks/zoom/rtms",
+          "event_usage": "EVENT_FOR_USER"
+        }
+      ]
+    }
+  }
+}

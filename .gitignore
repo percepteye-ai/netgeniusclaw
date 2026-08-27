@@ -1,0 +1,156 @@
+# Environment and secrets
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# pyATS
+*_archive/
+*_logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OpenClaw
+.openclaw/
+
+# iN2N keys/certs (feature 056) — runtime-generated self-signed keys, never committed.
+# Live path is ~/.openclaw/n2n/keys/ (already covered by .openclaw/); guard repo-local copies.
+**/n2n/keys/
+
+# Local agent state and audit harnesses
+.gait/
+memory/
+.pytest_cache/
+
+# Diagrams (generated)
+*.drawio.bak
+
+# Cloned MCP servers (installed by install.sh)
+mcp-servers/*
+# Directory-level documentation (tracked in repo)
+!mcp-servers/README.md
+# Built-in MCP servers (tracked in repo)
+!mcp-servers/n2n-mcp/
+!mcp-servers/protocol-mcp/
+!mcp-servers/suzieq-mcp/
+!mcp-servers/azure-network-mcp/
+!mcp-servers/gitlab-mcp/
+!mcp-servers/jenkins-mcp/
+!mcp-servers/gnmi-mcp/
+!mcp-servers/syslog-mcp/
+!mcp-servers/snmptrap-mcp/
+!mcp-servers/ipfix-mcp/
+!mcp-servers/multivendor-cli-mcp/
+!mcp-servers/cisco-psirt-mcp/
+# ...but never track its dedicated virtualenv (spec 076 FR-030a)
+mcp-servers/multivendor-cli-mcp/.venv/
+!mcp-servers/gns3-mcp-server/
+!mcp-servers/eve-ng-mcp-server/
+!mcp-servers/prisma-sdwan-mcp/
+!mcp-servers/nautobot-mcp-v2/
+!mcp-servers/nautobot-golden-config-mcp/
+!mcp-servers/nautobot-routing-mcp/
+!mcp-servers/memory-mcp/
+!mcp-servers/auvik-mcp/
+!mcp-servers/rag-mcp/
+!mcp-servers/claroty-mcp/
+!mcp-servers/ollama-mcp/
+!mcp-servers/twitter-mcp/
+!mcp-servers/twilio-voice-mcp/
+!mcp-servers/atlassian-mcp/
+!mcp-servers/chrome-devtools-mcp/
+# Documented as built-in but never committed (installers expect them) —
+# whitelisted so the upstream fix that adds them isn't silently re-ignored
+!mcp-servers/packet-buddy-mcp/
+!mcp-servers/tts-mcp/
+!mcp-servers/halo-mcp/
+!mcp-servers/fortinet-mcp/
+!mcp-servers/bgp-intel-mcp/
+!mcp-servers/document-mcp/
+!mcp-servers/zabbix-mcp/
+!mcp-servers/k8s-mcp/
+!mcp-servers/catc-mcp/
+!mcp-servers/nsm-mcp/
+!mcp-servers/analysis-mcp/
+!mcp-servers/redfish-mcp/
+# Re-ignore the downloaded upstream binary: 75 MB, fetched at install and
+# verified against CHECKSUMS. The negation above would otherwise commit it (spec 084).
+mcp-servers/k8s-mcp/kubernetes-mcp-server
+# Re-ignore the dedicated venv: the negation above re-includes EVERYTHING under
+# zabbix-mcp, which would otherwise commit the whole virtualenv (spec 083).
+mcp-servers/zabbix-mcp/.venv/
+!mcp-servers/anta-mcp/
+# Same re-ignore for anta-mcp's dedicated venv (spec 098). It exists because ANTA
+# pulls cryptography 50.0.0 while the system holds 46.0.5 with four unbounded
+# dependents -- including the federation TLS stack.
+mcp-servers/anta-mcp/.venv/
+!mcp-servers/zoom-rtms-mcp/
+# Spec 118: NetClaw for Zoom -- Meeting Intelligence.
+
+# Traces
+trace.json
+trace.json.gz
+
+.claude
+docs/blogs/
+.amazonq
+workspace/node_modules/
+.dev-secrets/
+
+# Sensitive config files (contain phone numbers, etc.)
+config/twilio-voice.json
+
+# Generated topology visualizations and downloaded/cached 3D assets (spec 046)
+# — regenerated on demand by output.py/assets.py, never checked in.
+workspace/output/
+
+# iN2N migration scaffold (contains per-member .env slices — never commit)
+migration-staging/
+
+# iN2N production enforcement + durable runtime (feature 057).
+# Live/generated state belongs under ~/.openclaw (already ignored) or
+# ~/.config/systemd/user — NEVER in the repo. Guard against repo-local copies:
+#   - the GAIT immutable audit trail (git repo of federation events)
+#   - generated systemd units / env (the checked-in TEMPLATE scripts/systemd/*.service stays)
+#   - any member scoped .env slices
+federation-events.jsonl
+gait/
+*.systemd.env
+mesh.systemd.env
+
+# NCFED Internet-Draft (feature 059) — generated build outputs; keep the .md source
+docs/ietf/*.xml
+docs/ietf/*.txt
+docs/ietf/*.html
+docs/ietf/.refcache/
+docs/ietf/kdrfc-err.txt
+
+# Containerlab runtime state (spec 076 R1 lab). Created root-owned by the
+# container runtime and regenerated on every deploy — lab output, not source.
+labs/*/clab-*/
+labs/**/.tls/

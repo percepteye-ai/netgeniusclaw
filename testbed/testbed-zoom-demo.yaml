@@ -1,0 +1,20 @@
+testbed:
+  name: NetClaw-Zoom-Demo
+
+devices:
+  R1:
+    alias: R1
+    type: router
+    os: iosxe
+    platform: CSR1kv
+    credentials:
+      default:
+        username: "%ENV{DEVNET_SANDBOX_USERNAME}"
+        password: "%ENV{DEVNET_SANDBOX_PASSWORD}"
+    connections:
+      cli:
+        protocol: ssh
+        ip: devnetsandboxiosxec9k.cisco.com
+        port: 22
+        arguments:
+          connection_timeout: 60

@@ -1,0 +1,188 @@
+/* path-trace.css — Styles for hop-by-hop forwarding path visualization */
+
+.path-trace {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.path-trace__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #F5F5F5;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.path-trace__endpoints {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.path-trace__arrow {
+  color: #1565C0;
+  margin: 0 4px;
+}
+
+.path-trace__ecmp-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #E8F5E9;
+  color: #2E7D32;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Path container */
+.path-trace__paths {
+  padding: 16px;
+}
+
+.path-trace__path {
+  margin-bottom: 16px;
+}
+
+.path-trace__path:last-child {
+  margin-bottom: 0;
+}
+
+.path-trace__path-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1565C0;
+  margin-bottom: 8px;
+}
+
+/* Hop-by-hop directed path */
+.path-trace__hops {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.path-trace__hop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  border: 2px solid #1565C0;
+  border-radius: 8px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.path-trace__hop-number {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: #1565C0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.path-trace__hop-device {
+  font-size: 13px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.path-trace__hop-interfaces {
+  font-size: 10px;
+  color: #757575;
+  font-family: 'SF Mono', 'Consolas', monospace;
+  margin-top: 2px;
+}
+
+.path-trace__hop-nexthop {
+  font-size: 10px;
+  color: #1565C0;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.path-trace__hop-action {
+  font-size: 9px;
+  color: #9E9E9E;
+  font-style: italic;
+}
+
+/* Arrow between hops */
+.path-trace__hop-arrow {
+  font-size: 20px;
+  color: #1565C0;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* Black hole / failure indicator */
+.path-trace__blackhole {
+  padding: 12px 16px;
+  background: #FFEBEE;
+  border-radius: 8px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.path-trace__blackhole-icon {
+  font-size: 24px;
+  color: #C62828;
+  flex-shrink: 0;
+}
+
+.path-trace__blackhole-icon::before {
+  content: "\2717"; /* X mark */
+}
+
+.path-trace__blackhole-info {
+  flex: 1;
+}
+
+.path-trace__blackhole-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #C62828;
+  margin-bottom: 2px;
+}
+
+.path-trace__blackhole-detail {
+  font-size: 13px;
+  color: #424242;
+}
+
+.path-trace__blackhole-device {
+  font-weight: 600;
+  color: #C62828;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+/* ECMP parallel branches indicator */
+.path-trace__ecmp-indicator {
+  font-size: 12px;
+  color: #2E7D32;
+  padding: 4px 8px;
+  background: #E8F5E9;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+/* No path state */
+.path-trace__no-path {
+  text-align: center;
+  padding: 40px 16px;
+  color: #C62828;
+  font-size: 16px;
+}

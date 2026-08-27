@@ -1,0 +1,183 @@
+/* health-scorecard.css — Styles for health scorecard visualization */
+
+.health-scorecard {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.health-scorecard__header {
+  padding: 12px 16px;
+  background: #F5F5F5;
+  border-bottom: 1px solid #E0E0E0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #212121;
+}
+
+/* Scorecard grid */
+.health-scorecard__grid {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scorecard entry row */
+.health-scorecard__entry {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #F5F5F5;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.health-scorecard__entry:hover {
+  background: #FAFAFA;
+}
+
+.health-scorecard__entry:last-child {
+  border-bottom: none;
+}
+
+/* Health indicator circle */
+.health-scorecard__health-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.health-scorecard__health-indicator--healthy { background: #2E7D32; }
+.health-scorecard__health-indicator--warning { background: #E65100; }
+.health-scorecard__health-indicator--critical { background: #C62828; }
+.health-scorecard__health-indicator--unknown { background: #9E9E9E; }
+
+/* Entry name */
+.health-scorecard__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212121;
+}
+
+/* Composite score display */
+.health-scorecard__score {
+  font-size: 20px;
+  font-weight: 700;
+  min-width: 50px;
+  text-align: right;
+}
+
+.health-scorecard__score--healthy { color: #2E7D32; }
+.health-scorecard__score--warning { color: #E65100; }
+.health-scorecard__score--critical { color: #C62828; }
+.health-scorecard__score--unknown { color: #9E9E9E; }
+
+.health-scorecard__score-label {
+  font-size: 10px;
+  color: #9E9E9E;
+  font-weight: 400;
+}
+
+/* Per-indicator status badges */
+.health-scorecard__indicators {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.health-scorecard__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.health-scorecard__badge--healthy {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.health-scorecard__badge--warning {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.health-scorecard__badge--critical {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.health-scorecard__badge--unknown {
+  background: #F5F5F5;
+  color: #9E9E9E;
+}
+
+.health-scorecard__badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.health-scorecard__badge--healthy .health-scorecard__badge-dot { background: #2E7D32; }
+.health-scorecard__badge--warning .health-scorecard__badge-dot { background: #E65100; }
+.health-scorecard__badge--critical .health-scorecard__badge-dot { background: #C62828; }
+.health-scorecard__badge--unknown .health-scorecard__badge-dot { background: #9E9E9E; }
+
+/* Drill-down expand/collapse */
+.health-scorecard__drilldown-icon {
+  font-size: 12px;
+  color: #9E9E9E;
+  transition: transform 0.2s ease;
+  margin-left: 4px;
+}
+
+.health-scorecard__entry--expanded .health-scorecard__drilldown-icon {
+  transform: rotate(90deg);
+}
+
+/* Drill-down detail rows */
+.health-scorecard__detail {
+  padding: 8px 16px 8px 48px;
+  background: #FAFAFA;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.health-scorecard__detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.health-scorecard__detail-name {
+  font-weight: 500;
+  color: #424242;
+  min-width: 80px;
+}
+
+.health-scorecard__detail-value {
+  color: #616161;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+/* Site-level summary row */
+.health-scorecard__summary-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #F5F5F5;
+  border-bottom: 1px solid #E0E0E0;
+  font-weight: 600;
+}

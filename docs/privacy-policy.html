@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NetGeniusClaw Mobile — Privacy Policy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         max-width: 720px; margin: 0 auto; padding: 24px 20px 64px; line-height: 1.6; color: #1a1a1a; }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  h2 { font-size: 1.15rem; margin-top: 2em; }
+  .updated { color: #666; font-size: 0.9rem; margin-bottom: 2em; }
+  code { background: #f2f2f2; padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+  ul { padding-left: 1.3em; }
+</style>
+</head>
+<body>
+
+<h1>NetGeniusClaw Mobile — Privacy Policy</h1>
+<p class="updated">Last updated: August 17, 2026</p>
+
+<p>NetGeniusClaw Mobile ("the app") is a companion client for a NetGeniusClaw Border — a network-automation
+assistant that you, the operator, host and run yourself. This policy describes what the app does
+and does not do with your information.</p>
+
+<h2>Who controls your data</h2>
+<p>NetGeniusClaw Mobile does not send your data to NetGeniusClaw's developer, to any analytics service, or to
+any advertising network. The app connects directly to <strong>the Border you personally set up and
+control</strong> — questions you ask, answers you receive, approvals you grant, and any photo,
+video, or audio capture you send all travel directly between your phone and your own Border over
+an encrypted connection you configured during enrollment. We (the app's developer) have no server
+that sees this traffic and no account system of our own.</p>
+
+<h2>What stays only on your device</h2>
+<ul>
+  <li>Your conversation history and pending-approval state are stored locally in the app's own
+  documents directory.</li>
+  <li>Your enrollment credentials (the key that lets your phone talk to your Border) are stored in
+  the device Keychain via iOS's secure storage — never in plain files, never synced to iCloud by
+  this app.</li>
+  <li>App preferences (theme, app-lock, notification settings) are stored locally the same way.</li>
+</ul>
+
+<h2>Device permissions the app requests, and why</h2>
+<ul>
+  <li><strong>Camera</strong> — to scan an enrollment QR code, and to capture photos/video you
+  choose to send to your Border. Captures go directly to your Border; the app's developer never
+  receives them.</li>
+  <li><strong>Microphone</strong> — to record a voice question you choose to send, and for
+  audio/video captures. Speech is transcribed on-device before anything is sent.</li>
+  <li><strong>Face ID / Touch ID</strong> — used only locally, to confirm approval decisions and
+  (optionally) to lock the app itself. Biometric data never leaves your device; the app only
+  receives a yes/no result from iOS.</li>
+  <li><strong>Local network access</strong> — to reach your Border, which is often running on the
+  same network as your phone.</li>
+  <li><strong>Notifications</strong> — to alert you when your Border has an answer or an approval
+  request waiting.</li>
+</ul>
+
+<h2>Push notifications</h2>
+<p>To deliver notifications when the app isn't open, NetGeniusClaw Mobile registers a device push token
+with Apple's Push Notification service and, via Firebase Cloud Messaging, with Google. This token
+is used solely to route a notification your own Border sends — it does not carry the content of
+your conversations, and neither Apple nor Google can read what your Border sent you.</p>
+
+<h2>Tracking, analytics, and advertising</h2>
+<p>NetGeniusClaw Mobile does not track you across other apps or websites, does not include advertising
+SDKs, and does not sell or share your data for marketing purposes. The app's declared privacy
+practices are documented in its iOS Privacy Manifest, submitted with every App Store build.</p>
+
+<h2>Data deletion</h2>
+<p>Removing this device from Settings → "Remove this device" clears the app's local enrollment and
+conversation data on your phone. Because your Border is self-hosted, any data already sent to it
+is governed by however you operate your own Border — this app has no ability to delete data from a
+Border it doesn't control.</p>
+
+<h2>Children's privacy</h2>
+<p>NetGeniusClaw Mobile is a network-engineering tool and is not directed at children. It does not
+knowingly collect information from children.</p>
+
+<h2>Changes to this policy</h2>
+<p>If this policy changes, the updated version will be posted at this same URL with a new "last
+updated" date.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy can be raised via the project's GitHub repository:
+<a href="https://github.com/automateyournetwork/netclaw">github.com/automateyournetwork/netclaw</a>.</p>
+
+</body>
+</html>

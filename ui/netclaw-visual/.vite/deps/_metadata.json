@@ -1,0 +1,112 @@
+{
+  "hash": "52cdf7de",
+  "configHash": "4fdc5127",
+  "lockfileHash": "bb3508fd",
+  "browserHash": "1d4643ee",
+  "optimized": {
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "2e90907c",
+      "needsInterop": false
+    },
+    "three/addons/controls/OrbitControls.js": {
+      "src": "../../node_modules/three/examples/jsm/controls/OrbitControls.js",
+      "file": "three_addons_controls_OrbitControls__js.js",
+      "fileHash": "215b71cc",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/EffectComposer.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/EffectComposer.js",
+      "file": "three_addons_postprocessing_EffectComposer__js.js",
+      "fileHash": "b6fe4e95",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/RenderPass.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/RenderPass.js",
+      "file": "three_addons_postprocessing_RenderPass__js.js",
+      "fileHash": "eaa8a905",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/UnrealBloomPass.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js",
+      "file": "three_addons_postprocessing_UnrealBloomPass__js.js",
+      "fileHash": "d485bd10",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/ShaderPass.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/ShaderPass.js",
+      "file": "three_addons_postprocessing_ShaderPass__js.js",
+      "fileHash": "85a026f7",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/OutputPass.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/OutputPass.js",
+      "file": "three_addons_postprocessing_OutputPass__js.js",
+      "fileHash": "0d00e217",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/SMAAPass.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/SMAAPass.js",
+      "file": "three_addons_postprocessing_SMAAPass__js.js",
+      "fileHash": "092795a3",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/AfterimagePass.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/AfterimagePass.js",
+      "file": "three_addons_postprocessing_AfterimagePass__js.js",
+      "fileHash": "a99323f5",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/FilmPass.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/FilmPass.js",
+      "file": "three_addons_postprocessing_FilmPass__js.js",
+      "fileHash": "b6d6c97b",
+      "needsInterop": false
+    },
+    "three/addons/postprocessing/GlitchPass.js": {
+      "src": "../../node_modules/three/examples/jsm/postprocessing/GlitchPass.js",
+      "file": "three_addons_postprocessing_GlitchPass__js.js",
+      "fileHash": "5adc0c26",
+      "needsInterop": false
+    },
+    "three/addons/shaders/RGBShiftShader.js": {
+      "src": "../../node_modules/three/examples/jsm/shaders/RGBShiftShader.js",
+      "file": "three_addons_shaders_RGBShiftShader__js.js",
+      "fileHash": "63e1688a",
+      "needsInterop": false
+    },
+    "three/addons/shaders/VignetteShader.js": {
+      "src": "../../node_modules/three/examples/jsm/shaders/VignetteShader.js",
+      "file": "three_addons_shaders_VignetteShader__js.js",
+      "fileHash": "7df4e67a",
+      "needsInterop": false
+    },
+    "three/addons/renderers/CSS2DRenderer.js": {
+      "src": "../../node_modules/three/examples/jsm/renderers/CSS2DRenderer.js",
+      "file": "three_addons_renderers_CSS2DRenderer__js.js",
+      "fileHash": "128acaec",
+      "needsInterop": false
+    },
+    "gsap": {
+      "src": "../../node_modules/gsap/index.js",
+      "file": "gsap.js",
+      "fileHash": "082de3f4",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-YZ7RHIIL": {
+      "file": "chunk-YZ7RHIIL.js"
+    },
+    "chunk-5CCEGZUF": {
+      "file": "chunk-5CCEGZUF.js"
+    },
+    "chunk-6ND65Z63": {
+      "file": "chunk-6ND65Z63.js"
+    },
+    "chunk-7ZCAHXB5": {
+      "file": "chunk-7ZCAHXB5.js"
+    }
+  }
+}

@@ -1,0 +1,1034 @@
+#!/usr/bin/env bash
+# netclaw — top-level NetClaw command.
+#
+#   netclaw                 interactive menu (TUI launcher, installer, peering)
+#   netclaw tui             open the NetClaw chat TUI (openclaw tui)
+#   netclaw install [...]   run the component installer (flags pass through)
+#   netclaw peering [status|bgp|n2n|ngrok]    protocol peering status (non-interactive)
+#   netclaw peering up|down                   start/stop daemon + ngrok together
+#   netclaw peering announce                  print an endpoint message to relay to peers
+#   netclaw chats [id]       list N2N chat sessions, or tail one
+#   netclaw chats --watch    live-watch for new sessions/lines (Ctrl+C to stop)
+#   netclaw link            (re)create the ~/.local/bin/netclaw symlink
+#
+#   NetClaw Mobile (enrolling a phone against this claw):
+#   netclaw risk role border <risk-name> [in2n]   promote standalone → Border
+#   netclaw risk edge-check                       preflight every precondition
+#   netclaw risk token --edge <device-label>       mint the single-use QR
+#   See mobile/netclaw-mobile/MOBILE-ONBOARDING.md for the full procedure.
+#
+# Reads peering state from the mesh daemon HTTP API (bgp-daemon-v2.py,
+# default http://127.0.0.1:8179) and N2N chat transcripts from
+# ~/.openclaw/n2n/chats/. `peering up`/`down` start/stop the daemon
+# (scripts/peering-setup.sh) and the ngrok tunnel together. `announce` does
+# NOT push over the wire — that already happens automatically every ~30s for
+# peers with a live channel (see bgp-daemon-v2.py's _endpoint_watcher). It
+# prints our current endpoint for you to relay out-of-band when the channel
+# is closed, which is the common case.
+set -euo pipefail
+
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+NETCLAW_ROOT="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
+# shellcheck source=lib/tui.sh
+source "$NETCLAW_ROOT/scripts/lib/tui.sh"
+
+# Agent runtime (openclaw default | hermes). The n2n federation subsystem
+# is OpenClaw-native; only the runtime binary and state-dir base are switched
+# here so `netclaw tui` and .env reads follow the chosen runtime.
+NETCLAW_RUNTIME="${NETCLAW_RUNTIME:-openclaw}"
+if [ "$NETCLAW_RUNTIME" = "hermes" ]; then
+    RUNTIME_CMD="hermes"; RUNTIME_HOME="${HERMES_HOME:-$HOME/.hermes}"; RUNTIME_TUI=(hermes --tui)
+else
+    RUNTIME_CMD="openclaw"; RUNTIME_HOME="$HOME/.openclaw"; RUNTIME_TUI=(openclaw tui)
+fi
+
+BGP_API="${NETCLAW_BGP_API:-http://127.0.0.1:8179}"
+NGROK_API="${NETCLAW_NGROK_API:-http://127.0.0.1:4040}"
+CHATS_DIR="${NETCLAW_N2N_CHATS:-$RUNTIME_HOME/n2n/chats}"
+RENDER_MD="$NETCLAW_ROOT/scripts/lib/render_md.py"
+
+render_md() { python3 "$RENDER_MD"; }
+
+# `|| true`: a connection failure here (daemon/ngrok down) is an expected,
+# already-handled condition downstream — it must never trip `set -e` and
+# kill the whole TUI when called bare from a menu case (e.g. `peering_overview; pause`).
+api_get() { curl -s --max-time 3 "$BGP_API$1" 2>/dev/null || true; }
+# NB: do not inline the default as "${2:-{}}" — bash ends the expansion at the
+# first `}`, so that reads as ${2:-{} followed by a literal `}` and appends a
+# stray brace to every body. The daemon then fails to parse it, logs "Bad JSON
+# body", and silently falls back to {} — so every POST payload (enrollment
+# labels, route request_text, member params) was being discarded.
+api_post() {
+    local body="${2-}"
+    [ -n "$body" ] || body='{}'
+    curl -s --max-time 30 -H 'Content-Type: application/json' -d "$body" "$BGP_API$1" 2>/dev/null || true
+}
+
+ngrok_get() { curl -s --max-time 3 "$NGROK_API$1" 2>/dev/null || true; }
+
+daemon_up() { api_get /status | grep -q '"running"'; }
+
+# Reads a setting from the runtime env. Checks .env first, then
+# mesh.systemd.env: the durable mesh units (features 056/057) keep daemon-only
+# settings such as N2N_EDGE_WS_PORT in the systemd env file rather than .env,
+# and looking at only the first file made `netclaw risk token --edge` fail with
+# no output on a correctly-configured Border.
+env_get() {
+    local f v
+    for f in "$RUNTIME_HOME/.env" "$RUNTIME_HOME/mesh.systemd.env"; do
+        v="$(grep -m1 "^${1}=" "$f" 2>/dev/null | cut -d= -f2-)"
+        [ -n "$v" ] && { printf '%s\n' "$v"; return 0; }
+    done
+    return 0
+}
+
+# Persists a setting back into the runtime env so it survives a daemon
+# restart. Writes to mesh.systemd.env if present (systemd-managed durable
+# mesh, features 056/057), else .env — mirroring env_get()'s read order.
+# Needed because _sync_risk_from_env() in bgp-daemon-v2.py re-applies N2N_ROLE
+# from the env file on every startup, unconditionally — confirmed live
+# 2026-08-19: `netclaw risk role border` succeeds (POST 200, `risk status`
+# shows role=border), but the very next daemon restart — exactly the step
+# this command's own output tells the operator to run — silently reverted it
+# back to whatever N2N_ROLE the env file still said, with no error at all.
+env_set() {
+    local key="$1" val="$2" f
+    f="$RUNTIME_HOME/mesh.systemd.env"
+    [ -f "$f" ] || f="$RUNTIME_HOME/.env"
+    touch "$f"
+    if grep -q "^${key}=" "$f" 2>/dev/null; then
+        sed -i.bak "s|^${key}=.*|${key}=${val}|" "$f" && rm -f "$f.bak"
+    else
+        echo "${key}=${val}" >> "$f"
+    fi
+}
+
+ngrok_up() { pgrep -f 'ngrok (tcp|start)' >/dev/null 2>&1; }
+
+ngrok_start() {
+    if ngrok_up; then
+        echo -e "  ${T_DIM}ngrok is already running.${T_NC}"
+        return 0
+    fi
+    local port
+    port="$(env_get BGP_LISTEN_PORT)"
+    if [ -z "$port" ]; then
+        echo -e "  ${T_YELLOW}BGP_LISTEN_PORT not set in $RUNTIME_HOME/.env — run peering-setup.sh first.${T_NC}"
+        return 1
+    fi
+    echo -e "  ${T_DIM}starting ngrok tcp $port...${T_NC}"
+    setsid nohup ngrok tcp "$port" --log /tmp/ngrok-mesh.log --log-format json \
+        > /dev/null 2>&1 < /dev/null &
+    disown
+    local i
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        sleep 1
+        local url
+        url="$(ngrok_get /api/tunnels | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    tcp = [t for t in d.get("tunnels", []) if t.get("proto") == "tcp"]
+    print(tcp[0]["public_url"].replace("tcp://", "") if tcp else "")
+except Exception:
+    print("")
+' 2>/dev/null)"
+        if [ -n "$url" ]; then
+            echo -e "  ${T_CYAN}ngrok up${T_NC}  endpoint: ${T_BOLD}${url}${T_NC}"
+            return 0
+        fi
+    done
+    echo -e "  ${T_YELLOW}ngrok started but no tcp tunnel appeared after 10s — check /tmp/ngrok-mesh.log${T_NC}"
+    return 1
+}
+
+ngrok_stop() {
+    if ! ngrok_up; then
+        echo -e "  ${T_DIM}ngrok is not running.${T_NC}"
+        return 0
+    fi
+    pkill -f 'ngrok (tcp|start)' 2>/dev/null || true
+    sleep 1
+    if ngrok_up; then
+        echo -e "  ${T_YELLOW}ngrok did not stop — check for a stuck process.${T_NC}"
+        return 1
+    fi
+    echo -e "  ${T_CYAN}ngrok stopped.${T_NC}  peers can no longer reach this node."
+}
+
+peering_start_all() {
+    echo ""
+    echo -e "  ${T_BOLD}Starting peering (daemon + ngrok)${T_NC}"
+    echo ""
+    "$NETCLAW_ROOT/scripts/peering-setup.sh" start
+    ngrok_start
+}
+
+peering_stop_all() {
+    echo ""
+    echo -e "  ${T_BOLD}Stopping peering (ngrok + daemon)${T_NC}"
+    echo ""
+    ngrok_stop
+    "$NETCLAW_ROOT/scripts/peering-setup.sh" stop
+}
+
+# Not a live push (that already happens automatically every ~30s for peers
+# with an open channel — see bgp-daemon-v2.py's _endpoint_watcher). This is
+# for the common case: the channel is closed and a human has to relay our
+# current endpoint out-of-band (Slack, text, etc.) so the peer can redial.
+peer_announce() {
+    if ! ngrok_up; then
+        echo -e "  ${T_YELLOW}ngrok is not running — nothing to announce. Start it first.${T_NC}"
+        return 1
+    fi
+    local endpoint
+    endpoint="$(ngrok_get /api/tunnels | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    tcp = [t for t in d.get("tunnels", []) if t.get("proto") == "tcp"]
+    print(tcp[0]["public_url"].replace("tcp://", "") if tcp else "")
+except Exception:
+    print("")
+' 2>/dev/null)"
+    if [ -z "$endpoint" ]; then
+        echo -e "  ${T_YELLOW}Could not read the current ngrok endpoint.${T_NC}"
+        return 1
+    fi
+    local as router_id name
+    as="$(env_get NETCLAW_LOCAL_AS)"
+    router_id="$(env_get NETCLAW_ROUTER_ID)"
+    name="$(env_get N2N_DISPLAY_NAME)"
+    echo ""
+    echo -e "  ${T_BOLD}Endpoint to relay${T_NC}  ${T_DIM}(paste to your peer out-of-band — Slack, text, etc.)${T_NC}"
+    echo ""
+    echo -e "  ${T_CYAN}NetClaw AS${as} (${name:-unnamed}) — new peering endpoint: ${T_BOLD}${endpoint}${T_NC}"
+    echo -e "  ${T_CYAN}Router ID ${router_id}. Update your n2n_consent host/port to redial.${T_NC}"
+    echo ""
+    if daemon_up; then
+        local peers
+        peers="$(api_get /n2n/status | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+for p in d.get("peers", []):
+    print("%s (%s)" % (p.get("identity","?"), p.get("display_name") or "unnamed"))
+' 2>/dev/null)"
+        if [ -n "$peers" ]; then
+            echo -e "  ${T_DIM}Federated peers who may need this:${T_NC}"
+            echo "$peers" | sed 's/^/    /'
+        fi
+    fi
+}
+
+daemon_down_msg() {
+    echo -e "  ${T_YELLOW}Mesh daemon is not running.${T_NC}"
+    echo -e "  ${T_DIM}Start it with: $NETCLAW_ROOT/scripts/peering-setup.sh start${T_NC}"
+}
+
+pause() { echo ""; echo -ne "  ${T_DIM}press any key to continue${T_NC}"; read -rsn1; echo ""; }
+
+# ── peering views ─────────────────────────────────────────────────
+peering_overview() {
+    echo ""
+    echo -e "  ${T_BOLD}Protocol Peering — overview${T_NC}"
+    echo ""
+    if ! daemon_up; then daemon_down_msg; return 0; fi
+    { api_get /status; api_get /n2n/status; ngrok_get /api/tunnels; } | python3 -c '
+import json, sys
+docs = json.JSONDecoder()
+raw = sys.stdin.read()
+out, i = [], 0
+while i < len(raw):
+    while i < len(raw) and raw[i] not in "{[": i += 1
+    if i >= len(raw): break
+    d, j = docs.raw_decode(raw, i); out.append(d); i = j
+status = out[0] if out else {}
+n2n = out[1] if len(out) > 1 else {}
+peers = status.get("peers", [])
+est = [p for p in peers if p.get("state") in ("Established", "OpenConfirm")]
+print("    BGP daemon : %s" % status.get("status", "?"))
+print("    BGP peers  : %d configured, %d established" % (len(peers), len(est)))
+for p in peers:
+    mesh = " (mesh)" if "ngrok" in p.get("peer", "") or p.get("peer", "").startswith("mesh-") else ""
+    print("      %-30s %s%s" % (p.get("peer", "?"), p.get("state", "?"), mesh))
+print("    N2N        : %s  identity %s" % ("enabled" if n2n.get("enabled") else "disabled", n2n.get("identity", "-")))
+for p in n2n.get("peers", []):
+    stale = " STALE" if p.get("stale") else ""
+    chat = "chat" if p.get("chat_enabled") else "no-chat"
+    print("      %-24s %-12s %-10s %s%s" % (p.get("identity", "?"), p.get("display_name") or "-", p.get("state", "?"), chat, stale))
+tun = [t for t in (out[2].get("tunnels", []) if len(out) > 2 else []) if t.get("proto") == "tcp"]
+if tun:
+    print("    ngrok      : up  %s -> %s" % (tun[0].get("public_url", "?").replace("tcp://", ""), tun[0].get("config", {}).get("addr", "?")))
+else:
+    print("    ngrok      : DOWN (no tcp tunnel — mesh peers cannot reach this node)")
+'
+}
+
+peering_bgp() {
+    echo ""
+    echo -e "  ${T_BOLD}BGP detail${T_NC}"
+    echo ""
+    if ! daemon_up; then daemon_down_msg; return 0; fi
+    echo -e "  ${T_CYAN}Sessions${T_NC}"
+    api_get /status | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+for p in d.get("peers", []):
+    print("    %-30s %s" % (p.get("peer", "?"), p.get("state", "?")))
+print("    injected routes: %d" % len(d.get("injected_routes", [])))
+'
+    echo ""
+    echo -e "  ${T_CYAN}RIB (best routes)${T_NC}"
+    api_get /rib | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+rib = d.get("loc_rib", {})
+if not rib: print("    (empty)")
+for pfx, r in rib.items():
+    path = ",".join(str(a) for a in r.get("as_path", [])) or "local"
+    print("    %-28s via %-22s as_path [%s] (%s)" % (pfx, r.get("peer_ip", "-"), path, r.get("source", "?")))
+'
+}
+
+peering_n2n() {
+    echo ""
+    echo -e "  ${T_BOLD}N2N federation detail${T_NC}"
+    echo ""
+    if ! daemon_up; then daemon_down_msg; return 0; fi
+    api_get /n2n/status | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+print("    enabled  : %s" % d.get("enabled"))
+print("    identity : %s" % d.get("identity", "-"))
+peers = d.get("peers", [])
+print("    peers    : %d" % len(peers))
+for p in peers:
+    print("")
+    print("      %s (%s)" % (p.get("identity", "?"), p.get("display_name") or "unnamed"))
+    print("        state=%s chat=%s inventory_v%s received=%s%s" % (
+        p.get("state", "?"), p.get("chat_enabled"),
+        p.get("inventory_version"), p.get("inventory_received_at"),
+        " STALE" if p.get("stale") else ""))
+'
+}
+
+peering_ngrok() {
+    echo ""
+    echo -e "  ${T_BOLD}Ngrok tunnel (mesh transport)${T_NC}"
+    echo ""
+    local tunnels
+    tunnels="$(ngrok_get /api/tunnels)"
+    if [ -z "$tunnels" ]; then
+        echo -e "  ${T_YELLOW}ngrok agent is not running (no API on ${NGROK_API}).${T_NC}"
+        echo -e "  ${T_DIM}Mesh peers cannot dial in without the tunnel. See scripts/peering-setup.sh${T_NC}"
+        return 0
+    fi
+    printf '%s' "$tunnels" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+tcp = [t for t in d.get("tunnels", []) if t.get("proto") == "tcp"]
+if not tcp:
+    print("    agent up, but NO tcp tunnel — mesh peers cannot reach this node")
+for t in tcp:
+    c = t.get("metrics", {}).get("conns", {})
+    print("    endpoint   : %s" % t.get("public_url", "?").replace("tcp://", ""))
+    print("    forwards to: %s" % t.get("config", {}).get("addr", "?"))
+    print("    conns      : %s total, %s open" % (c.get("count", 0), c.get("gauge", 0)))
+'
+    local proc
+    proc="$(pgrep -af "ngrok (tcp|start)" 2>/dev/null | head -1 || true)"
+    [ -n "$proc" ] && echo -e "    ${T_DIM}agent      : pid ${proc%% *}${T_NC}"
+}
+
+# ── N2N chat viewer ───────────────────────────────────────────────
+# Single-pass scan of all transcripts, newest activity first, into
+# parallel arrays: CHAT_FILES (path), CHAT_LABELS ("id  peers  N msgs  HH:MM"),
+# CHAT_DAYS (YYYY-MM-DD of last activity — the menu groups by this).
+chats_scan() {
+    CHAT_FILES=(); CHAT_LABELS=(); CHAT_DAYS=()
+    ls "$CHATS_DIR"/*.txt >/dev/null 2>&1 || return 1
+    local day label f
+    while IFS=$'\t' read -r day label f; do
+        CHAT_DAYS+=("$day"); CHAT_LABELS+=("$label"); CHAT_FILES+=("$f")
+    done < <(python3 - "$CHATS_DIR" <<'PY'
+import datetime, glob, os, re, sys
+files = sorted(glob.glob(os.path.join(sys.argv[1], "*.txt")),
+               key=os.path.getmtime, reverse=True)
+for f in files:
+    sid = os.path.basename(f)[:-4]
+    peers, msgs = [], 0
+    with open(f, errors="replace") as fh:
+        for line in fh:
+            m = re.match(r"\S+ \[([^\]]+)\]", line)
+            if m:
+                msgs += 1
+                if m.group(1) not in peers: peers.append(m.group(1))
+    mt = datetime.datetime.fromtimestamp(os.path.getmtime(f))
+    print("%s\t%s  %-45s %3d msgs  %s\t%s" % (
+        mt.strftime("%Y-%m-%d"), sid[:8],
+        ",".join(peers)[:45] or "-", msgs, mt.strftime("%H:%M"), f))
+PY
+)
+    [ ${#CHAT_FILES[@]} -gt 0 ]
+}
+
+chats_list() {
+    if ! chats_scan; then
+        echo -e "  ${T_DIM}No N2N chat sessions found in $CHATS_DIR${T_NC}"
+        return 1
+    fi
+    local i last=""
+    for i in "${!CHAT_FILES[@]}"; do
+        if [ "${CHAT_DAYS[$i]}" != "$last" ]; then
+            last="${CHAT_DAYS[$i]}"
+            echo -e "  ${T_PINK}${T_BOLD}${last}${T_NC}"
+        fi
+        echo "    ${CHAT_LABELS[$i]}"
+    done
+}
+
+chat_tail() {
+    local f="$1"
+    echo ""
+    echo -e "  ${T_BOLD}$(basename "$f" .txt)${T_NC}  ${T_DIM}(live — Ctrl+C to go back)${T_NC}"
+    echo ""
+    # initial backlog sized to the window, not a fixed 40 lines
+    local rows
+    rows=$(tput lines 2>/dev/null || echo 24)
+    tail -n $(( rows > 10 ? rows - 6 : 5 )) "$f" | render_md
+    # poll (not `tail -f`) so new content lands in complete chunks —
+    # render_md needs whole blocks to detect multi-line markdown tables.
+    #
+    # `trap 'break' INT` alone is unreliable here: when SIGINT hits a foreground
+    # `sleep`, bash's non-interactive default kills the whole process before the
+    # trap can run. Backgrounding sleep and `wait`-ing on it makes the signal
+    # interrupt `wait` instead, so the trap fires and the flag check below
+    # actually gets to run.
+    local stop=0
+    trap 'stop=1' INT
+    local size
+    size="$(wc -c < "$f" 2>/dev/null || echo 0)"
+    while true; do
+        sleep 2 & wait $! || true
+        [ "$stop" -eq 1 ] && break
+        local cur
+        cur="$(wc -c < "$f" 2>/dev/null || echo 0)"
+        if [ "$cur" -gt "$size" ]; then
+            tail -c "+$((size + 1))" "$f" | render_md
+            size="$cur"
+        fi
+    done
+    trap - INT
+    echo ""
+}
+
+chats_watch() {
+    local interval="${1:-5}"
+    echo ""
+    echo -e "  ${T_BOLD}Watching for N2N chat activity${T_NC}  ${T_DIM}(new sessions + new lines, every ${interval}s — Ctrl+C to go back)${T_NC}"
+    echo ""
+    # `trap 'break' INT` alone is unreliable: SIGINT hitting a foreground
+    # `sleep` kills the whole process before the trap runs. Background sleep
+    # and `wait` on it so the signal interrupts `wait` instead, letting the
+    # trap set a flag the loop actually gets to check.
+    local stop=0
+    trap 'stop=1' INT
+    declare -A sizes
+    local f prev cur
+    if ls "$CHATS_DIR"/*.txt >/dev/null 2>&1; then
+        while IFS= read -r f; do sizes["$f"]="$(wc -c < "$f" 2>/dev/null || echo 0)"; done \
+            < <(ls -1 "$CHATS_DIR"/*.txt 2>/dev/null)
+    fi
+    while true; do
+        if ls "$CHATS_DIR"/*.txt >/dev/null 2>&1; then
+            while IFS= read -r f; do
+                prev="${sizes[$f]:-}"
+                cur="$(wc -c < "$f" 2>/dev/null || echo 0)"
+                if [ -z "$prev" ]; then
+                    echo -e "  ${T_CYAN}new session${T_NC}  $(basename "$f" .txt)"
+                    prev=0
+                fi
+                if [ "$cur" -gt "$prev" ]; then
+                    echo -e "  ${T_DIM}--- $(basename "$f" .txt) ---${T_NC}"
+                    tail -c "+$((prev + 1))" "$f" | render_md
+                fi
+                sizes["$f"]="$cur"
+            done < <(ls -1 "$CHATS_DIR"/*.txt 2>/dev/null)
+        fi
+        sleep "$interval" & wait $! || true
+        [ "$stop" -eq 1 ] && break
+    done
+    trap - INT
+}
+
+chats_menu() {
+    while true; do
+        clear
+        if ! chats_scan; then
+            echo -e "  ${T_DIM}No N2N chat sessions found in $CHATS_DIR${T_NC}"
+            echo ""
+            tui_menu "N2N chat sessions" "▶ Watch for new activity (live)" "← Back" || return 0
+            [ "$TUI_CHOICE" -eq 0 ] && { chats_watch; continue; }
+            return 0
+        fi
+        # distinct days, newest first, with per-day session counts
+        local days=() d i n
+        for d in "${CHAT_DAYS[@]}"; do
+            case " ${days[*]-} " in *" $d "*) ;; *) days+=("$d") ;; esac
+        done
+        local latest="${CHAT_LABELS[0]%%  *}"
+        local opts=("▶ Watch for new activity (live)" "▶ Latest session ${latest} (live tail)")
+        local suffix
+        for d in "${days[@]}"; do
+            n=0
+            for i in "${!CHAT_DAYS[@]}"; do [ "${CHAT_DAYS[$i]}" = "$d" ] && n=$((n + 1)); done
+            suffix="sessions"; [ "$n" -eq 1 ] && suffix="session"
+            opts+=("$d  ·  $n $suffix")
+        done
+        opts+=("← Back")
+        tui_menu "N2N chat sessions (by day, newest first)" "${opts[@]}" || return 0
+        case "$TUI_CHOICE" in
+            0) chats_watch; continue ;;
+            1) chat_tail "${CHAT_FILES[0]}"; continue ;;
+        esac
+        local di=$((TUI_CHOICE - 2))
+        [ "$di" -ge "${#days[@]}" ] && return 0
+        chats_day_menu "${days[$di]}"
+    done
+}
+
+chats_day_menu() {
+    local day="$1"
+    while true; do
+        clear
+        local opts=() map=() i
+        for i in "${!CHAT_FILES[@]}"; do
+            [ "${CHAT_DAYS[$i]}" = "$day" ] || continue
+            opts+=("${CHAT_LABELS[$i]}"); map+=("$i")
+        done
+        opts+=("← Back")
+        tui_menu "N2N chats — $day (newest first)" "${opts[@]}" || return 0
+        [ "$TUI_CHOICE" -ge "${#map[@]}" ] && return 0
+        chat_tail "${CHAT_FILES[${map[$TUI_CHOICE]}]}"
+    done
+}
+
+# ── iN2N risk views (feature 056) ─────────────────────────────────
+risk_overview() {
+    echo ""
+    echo -e "  ${T_BOLD}Risk — iN2N internal federation${T_NC}"
+    echo ""
+    api_get /n2n/risk | python3 -c '
+import json, sys
+try: d = json.load(sys.stdin)
+except Exception: print("    daemon not reachable (is the mesh daemon running?)"); sys.exit()
+print("    role         : %s" % d.get("role", "?"))
+print("    risk         : %s" % (d.get("risk_name") or "-"))
+if d.get("role") == "border":
+    print("    stacks       : %s" % (d.get("enabled_stacks") or "-"))
+    print("    members      : %s total, %s active" % (d.get("member_count", 0), d.get("members_active", 0)))
+elif d.get("role") == "member":
+    print("    member_id    : %s" % (d.get("self_member_id") or "-"))
+else:
+    # Spec 105: the old wording here was just "a risk of one, its own Border",
+    # which reads as "Border things will work" — they do not. Standalone is its
+    # own Border for federation *identity* only; it issues no enrollment tokens
+    # and starts no mobile edge listener. Say so where the operator looks.
+    print("    (standalone — its own Border for identity only)")
+    print("    note         : standalone cannot issue mobile enrollment tokens.")
+    print("                   To enroll a phone:  netclaw risk role border <risk-name>")
+'
+}
+
+risk_members() {
+    echo ""
+    echo -e "  ${T_BOLD}Risk members${T_NC}"
+    api_get /n2n/members | python3 -c '
+import json, sys
+try: d = json.load(sys.stdin)
+except Exception: print("    daemon not reachable"); sys.exit()
+ms = d.get("members", [])
+if not ms: print("    (no members — add one: netclaw risk add <profile> <name>)"); sys.exit()
+for m in ms:
+    live = "●" if m.get("live") else "○"
+    print("    %s %-24s %-9s %-10s specialty:%d" % (
+        live, m.get("member_id","?"), m.get("profile","-"), m.get("state","-"),
+        m.get("specialty_count",0)))
+'
+}
+
+risk_health() {
+    echo ""
+    echo -e "  ${T_BOLD}Member health${T_NC}"
+    api_get /n2n/members/health | python3 -c '
+import json, sys
+try: d = json.load(sys.stdin)
+except Exception: print("    daemon not reachable"); sys.exit()
+for m in d.get("members", []):
+    print("    %-24s %-11s failures:%d live:%s" % (
+        m.get("member_id","?"), m.get("state","-"), m.get("auth_failures",0),
+        m.get("live")))
+'
+}
+
+risk_add() {  # risk_add <profile|custom> <name> [csv-skills]
+    local profile="$1" name="$2" specialty="$3"
+    [ -n "$name" ] || { echo "usage: netclaw risk add <profile|custom> <name> [skill,skill]"; return 1; }
+    local body
+    if [ "$profile" = "custom" ]; then
+        body="{\"name\":\"$name\",\"profile\":\"custom\",\"specialty\":[$(echo "$specialty" | awk -F, '{for(i=1;i<=NF;i++){printf "%s\"%s\"", (i>1?",":""), $i}}')]}"
+    else
+        body="{\"name\":\"$name\",\"profile\":\"$profile\"}"
+    fi
+    api_post /n2n/members/add "$body" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+if "error" in d: print("    error: %s" % d["error"]); sys.exit(1)
+print("    provisioned %s (%s)" % (d["member_id"], d.get("profile")))
+print("    enrollment token: %s" % d["enrollment_token"])
+j = d.get("join", {})
+print("    to bring it up, install NetClaw with:")
+print("      N2N_ROLE=member N2N_RISK_NAME=%s N2N_BORDER_ENDPOINT=%s" % (
+    j.get("N2N_RISK_NAME"), j.get("N2N_BORDER_ENDPOINT")))
+print("      N2N_ENROLLMENT_TOKEN=%s" % j.get("token"))
+'
+}
+
+risk_remove() {  # risk_remove <member_id>
+    local mid="$1"
+    [ -n "$mid" ] || { echo "usage: netclaw risk remove <member_id>"; return 1; }
+    tui_yesno "Remove member '$mid' (unpin key, refuse reconnect)?" n || { echo "  cancelled."; return 0; }
+    api_post /n2n/members/remove "{\"member_id\":\"$mid\"}" | python3 -c '
+import json,sys; d=json.load(sys.stdin); print("    removed:", d.get("removed"), d.get("member_id"))'
+}
+
+risk_token() {  # risk_token [label]
+    api_post /n2n/enroll/token "{\"label\":\"${1:-}\"}" | python3 -c '
+import json,sys; d=json.load(sys.stdin)
+print("    error:", d["error"]) if "error" in d else print("    token:", d["token"])'
+}
+
+risk_role() {  # risk_role <standalone|border|member> [risk-name] [stacks]
+    # Spec 105. Before this, promoting a standalone claw to Border — the one
+    # step every mobile install needs — had no CLI at all, so the docs carried a
+    # raw curl. A curl written without the scheme and port silently no-ops
+    # (`127.0.0.1/n2n/risk` never reaches the daemon), which is exactly what
+    # happened on the first real-world install: no error, role unchanged.
+    local role="$1" name="${2:-}" stacks="${3:-}"
+    case "$role" in
+        standalone|border|member) ;;
+        *) echo "usage: netclaw risk role <standalone|border|member> [risk-name] [stacks]"
+           echo "  e.g. netclaw risk role border my-risk in2n     # enroll phones"
+           return 1 ;;
+    esac
+    if [ "$role" = "border" ]; then
+        # Carry forward what this claw already is when an argument is omitted.
+        # /n2n/risk overwrites every field it is given, so defaulting a blank
+        # `stacks` to "in2n" on a claw already running "both" would silently
+        # switch OFF external federation as a side effect of a mobile fix.
+        local cur_json cur_stacks cur_name
+        cur_json="$(api_get /n2n/risk)"
+        cur_stacks="$(printf '%s' "$cur_json" | python3 -c 'import json,sys
+try: print(json.load(sys.stdin).get("enabled_stacks") or "")
+except Exception: print("")' 2>/dev/null)"
+        cur_name="$(printf '%s' "$cur_json" | python3 -c 'import json,sys
+try: print(json.load(sys.stdin).get("risk_name") or "")
+except Exception: print("")' 2>/dev/null)"
+        name="${name:-$cur_name}"
+        [ -n "$name" ] || { echo "  a Border needs a risk name: netclaw risk role border <risk-name> [stacks]"; return 1; }
+        # in2n when there is nothing to preserve: the mobile edge listener is
+        # gated on the stack as well as the role, and a Border with no stack
+        # enabled starts no listener — a promote that looks successful and still
+        # cannot enroll a phone.
+        stacks="${stacks:-${cur_stacks:-in2n}}"
+        case "$stacks" in
+            in2n|both) ;;
+            *) echo "  note: enabled_stacks='$stacks' does not include in2n —"
+               echo "        the mobile edge listener will not start. Pass 'in2n' or 'both'." ;;
+        esac
+    fi
+    local body
+    body="$(python3 -c '
+import json, sys
+role, name, stacks = sys.argv[1], sys.argv[2], sys.argv[3]
+b = {"role": role}
+if name: b["risk_name"] = name
+if stacks: b["enabled_stacks"] = stacks
+print(json.dumps(b))' "$role" "$name" "$stacks")"
+    api_post /n2n/risk "$body" | python3 -c '
+import json, sys
+raw = sys.stdin.read().strip()
+if not raw:
+    print("    no response from the daemon API — is the mesh running?")
+    print("    check:  systemctl --user status netclaw-mesh.service")
+    sys.exit(1)
+try: d = json.loads(raw)
+except Exception: print("    unexpected response:", raw[:200]); sys.exit(1)
+if "error" in d:
+    print("    error:", d["error"]); sys.exit(1)
+print("    role  : %s" % d.get("role"))
+print("    risk  : %s" % (d.get("risk_name") or "-"))
+print("    %s" % d.get("note", ""))'
+    local rc=$?
+    [ "$rc" -eq 0 ] || return "$rc"
+    env_set N2N_ROLE "$role"
+    [ -n "$name" ] && env_set N2N_RISK_NAME "$name"
+    [ -n "$stacks" ] && env_set N2N_ENABLED_STACKS "$stacks"
+    echo ""
+    echo "  Restart the mesh for the change to take effect, then verify:"
+    echo "      systemctl --user restart netclaw-mesh.service"
+    echo "      $(basename "$0") risk edge-check"
+}
+
+# Spec 105: one command that checks every precondition for enrolling a phone.
+# Written because the first real-world install cleared five independent
+# blockers, each of which masked the next and none of which named itself:
+# wrong role, disabled stack, a promote that silently no-op'd, a missing
+# Python module, a mistyped port, and an un-forwarded firewall port.
+risk_edge_check() {
+    echo ""
+    echo -e "  ${T_BOLD}NetClaw Mobile — edge enrollment preflight${T_NC}"
+    echo ""
+
+    local envf="$RUNTIME_HOME/.env" fail=0
+
+    # 1-2. Role + stack, straight from the daemon.
+    local risk_json; risk_json="$(api_get /n2n/risk)"
+    if [ -z "$risk_json" ]; then
+        echo "  ✗ daemon    : not reachable at $BGP_API"
+        echo "                systemctl --user status netclaw-mesh.service"
+        return 1
+    fi
+    local role stacks riskname
+    role="$(printf '%s' "$risk_json" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("role",""))' 2>/dev/null)"
+    stacks="$(printf '%s' "$risk_json" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("enabled_stacks") or "")' 2>/dev/null)"
+    riskname="$(printf '%s' "$risk_json" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("risk_name") or "")' 2>/dev/null)"
+
+    if [ "$role" = "border" ]; then
+        echo "  ✓ role      : border (risk=${riskname:--})"
+    else
+        echo "  ✗ role      : $role — only a Border can issue enrollment tokens"
+        echo "                netclaw risk role border <risk-name> in2n"
+        fail=1
+    fi
+    case "$stacks" in
+        in2n|both) echo "  ✓ stack     : $stacks (in2n enabled)" ;;
+        *) echo "  ✗ stack     : ${stacks:--} — the edge listener needs in2n"
+           echo "                netclaw risk role border ${riskname:-<risk-name>} in2n"
+           fail=1 ;;
+    esac
+
+    # 3. The two env vars, including the duplicate-line case that makes a
+    #    mistyped port survive a 'fix' (last line wins, and it may not be yours).
+    local domain port dupes
+    domain="$(env_get N2N_CLAW_DOMAIN)"; port="$(env_get N2N_EDGE_WS_PORT)"
+    if [ -n "$domain" ]; then echo "  ✓ domain    : $domain"
+    else echo "  ✗ domain    : N2N_CLAW_DOMAIN unset in $envf"; fail=1; fi
+    if [ -n "$port" ]; then echo "  ✓ port      : $port"
+    else echo "  ✗ port      : N2N_EDGE_WS_PORT unset in $envf"; fail=1; fi
+    if [ -f "$envf" ]; then
+        dupes="$(grep -cE '^[[:space:]]*N2N_EDGE_WS_PORT=' "$envf" 2>/dev/null || true)"
+        if [ "${dupes:-0}" -gt 1 ]; then
+            echo "  ! env       : N2N_EDGE_WS_PORT appears $dupes times in $envf (last wins)"
+        fi
+    fi
+
+    # 4. The daemon's own deps, under the interpreter systemd actually runs —
+    #    not whatever `python3` resolves to in this shell.
+    local mesh_py="/usr/bin/python3" unit="$HOME/.config/systemd/user/netclaw-mesh.service"
+    [ -f "$unit" ] && mesh_py="$(sed -n 's/^ExecStart=\([^ ]*\).*/\1/p' "$unit" | head -1)"
+    mesh_py="${mesh_py:-/usr/bin/python3}"
+    local missing=""
+    for mod in websockets qrcode; do
+        "$mesh_py" -c "import $mod" >/dev/null 2>&1 || missing="$missing $mod"
+    done
+    if [ -z "$missing" ]; then
+        echo "  ✓ deps      : websockets + qrcode importable by $mesh_py"
+    else
+        echo "  ✗ deps      :$missing missing for $mesh_py"
+        echo "                $mesh_py -m pip install --break-system-packages$missing"
+        echo "                (or: sudo apt install$(printf ' python3-%s' $missing))"
+        fail=1
+    fi
+
+    # 5. Did the listener actually bind? Ask the daemon, then confirm the socket.
+    local st; st="$(api_get /n2n/health | python3 -c '
+import json,sys
+try: d=json.load(sys.stdin)
+except Exception: print(""); sys.exit()
+e=d.get("edge_listener") or {}
+print("%s|%s|%s" % (e.get("state",""), e.get("error") or "", e.get("hint") or ""))' 2>/dev/null)"
+    # NB: separate statements, not one `local a=… b="${a}…"`. A single `local`
+    # expands every argument before assigning any, so the later references would
+    # read as unbound under `set -u`.
+    local lstate rest lerr lhint
+    lstate="${st%%|*}"; rest="${st#*|}"; lerr="${rest%%|*}"; lhint="${rest#*|}"
+    case "$lstate" in
+        listening) echo "  ✓ listener  : bound" ;;
+        "")        echo "  ! listener  : daemon reports no edge state (older daemon, or still starting)" ;;
+        *)         echo "  ✗ listener  : $lstate${lerr:+ — $lerr}"
+                   [ -n "$lhint" ] && echo "                $lhint"
+                   fail=1 ;;
+    esac
+    if [ -n "$port" ]; then
+        # `ss` (iproute2) is Linux-only — doesn't exist on macOS at all, where
+        # this whole edge-check path had apparently never been run before
+        # (confirmed live 2026-08-19: the listener really was bound — lsof/nc
+        # both confirmed it — but this check always reported "nothing
+        # listening" because `ss` silently failed as "command not found").
+        # `lsof` ships on both macOS and Linux, so it's the portable fallback.
+        local _socket_up=1
+        if command -v ss >/dev/null 2>&1; then
+            ss -tlnH "sport = :$port" 2>/dev/null | grep -q . && _socket_up=0
+        else
+            lsof -iTCP -sTCP:LISTEN -P -n 2>/dev/null | grep -q ":${port} " && _socket_up=0
+        fi
+        if [ "$_socket_up" -eq 0 ]; then
+            echo "  ✓ socket    : something is listening on :$port"
+        else
+            echo "  ✗ socket    : nothing listening on :$port"
+            echo "                journalctl --user -u netclaw-mesh.service --since '2 min ago' | grep -i Edge"
+            fail=1
+        fi
+    fi
+
+    # 6. DNS must resolve the claw domain to the public IP the phone will hit,
+    #    or TLS cannot match no matter how the firewall is built.
+    if [ -n "$domain" ]; then
+        local resolved wan
+        # `getent` (glibc) doesn't exist on macOS at all — under this script's
+        # `set -e`, that command-not-found killed the ENTIRE edge-check
+        # function silently mid-run (confirmed live 2026-08-19: no error
+        # shown, just everything after "socket" missing and exit code 127).
+        # python3's socket module resolves portably on every platform this
+        # repo already requires python3 on.
+        resolved="$(python3 -c '
+import socket, sys
+try:
+    print(socket.gethostbyname(sys.argv[1]))
+except Exception:
+    pass' "$domain" 2>/dev/null)"
+        wan="$(curl -s --max-time 5 https://api.ipify.org 2>/dev/null || true)"
+        if [ -z "$resolved" ]; then
+            echo "  ✗ dns       : $domain does not resolve"; fail=1
+        elif [ -n "$wan" ] && [ "$resolved" != "$wan" ]; then
+            echo "  ! dns       : $domain → $resolved, but this host's public IP is $wan"
+            echo "                fine behind a NAT/VIP that forwards :$port — verify the forward"
+        else
+            echo "  ✓ dns       : $domain → $resolved"
+        fi
+    fi
+
+    echo ""
+    if [ "$fail" -eq 0 ]; then
+        echo "  All local checks passed. Inbound :$port must also be reachable from"
+        echo "  the internet — a phone on cellular is not on your LAN. Then:"
+        echo "      $(basename "$0") risk token --edge <device-label>"
+    else
+        echo "  Fix the ✗ lines above, restart the mesh, and re-run this check:"
+        echo "      systemctl --user restart netclaw-mesh.service"
+    fi
+    echo ""
+    return "$fail"
+}
+
+risk_edge_token() {  # risk_edge_token [label] — feature 066: NetClaw Mobile enrollment
+    # Reuses the SAME bare-token route as risk_token(); node_type is set later,
+    # server-side, by which listener (agent TCP vs edge WS) actually consumes
+    # it (contract §2) — the CLI's only job is to package the token as a QR
+    # payload the phone can scan instead of a token an operator must copy.
+    local domain port host
+    domain="$(env_get N2N_CLAW_DOMAIN)"
+    port="$(env_get N2N_EDGE_WS_PORT)"
+    host="${domain:-$(env_get N2N_BORDER_ENDPOINT | cut -d: -f1)}"
+    if [ -z "$domain" ] || [ -z "$port" ]; then
+        echo "  N2N_CLAW_DOMAIN and N2N_EDGE_WS_PORT must both be set in $RUNTIME_HOME/.env" >&2
+        echo "  before issuing an edge (phone) enrollment QR." >&2
+        echo "  Run '$(basename "$0") risk edge-check' for the full preflight." >&2
+        return 1
+    fi
+    # Spec 105: mint, but never report a bare API error without its remedy. The
+    # daemon answers a non-Border with "only a Border can issue enrollment
+    # tokens", which is true and yet points at the wrong layer whenever the role
+    # is right and the listener died for another reason — so route any failure
+    # through the preflight, which names the actual cause.
+    local resp; resp="$(api_post /n2n/enroll/token "{\"label\":\"${1:-}\"}")"
+    if [ -z "$resp" ] || printf '%s' "$resp" | grep -q '"error"'; then
+        printf '%s' "$resp" | python3 -c '
+import json, sys
+raw = sys.stdin.read().strip()
+try: print("  error:", json.loads(raw).get("error", raw[:200]))
+except Exception: print("  no response from the daemon API at the /n2n/enroll/token route")' >&2
+        echo "" >&2
+        echo "  Diagnosing — this is almost never really about the token:" >&2
+        risk_edge_check >&2
+        return 1
+    fi
+    printf '%s' "$resp" | python3 -c "
+import json, sys
+try:
+    import qrcode
+except ImportError:
+    print('    qrcode not installed — pip install -r mcp-servers/protocol-mcp/requirements.txt')
+    sys.exit(1)
+d = json.load(sys.stdin)
+if 'error' in d:
+    print('    error:', d['error']); sys.exit(1)
+payload = {
+    'border_host': '$host', 'border_port': int('$port'),
+    'claw_domain': '$domain', 'enrollment_token': d['token'],
+}
+qr = qrcode.QRCode(border=1)
+qr.add_data(json.dumps(payload, separators=(',', ':')))
+qr.make(fit=True)
+qr.print_ascii(tty=False)
+print('    (fallback) raw payload:', json.dumps(payload))
+"
+}
+
+risk_route() {  # risk_route "<request>" [capability]
+    local req="$1" cap="$2"
+    [ -n "$req" ] || { echo 'usage: netclaw risk route "<request>" [capability]'; return 1; }
+    local body="{\"request_text\":$(python3 -c 'import json,sys;print(json.dumps(sys.argv[1]))' "$req")"
+    [ -n "$cap" ] && body="$body,\"capability\":\"$cap\""
+    body="$body}"
+    api_post /n2n/route "$body" | python3 -c '
+import json,sys; d=json.load(sys.stdin)
+if "error" in d: print("    %s: %s" % (d["error"], d.get("message","")))
+else: print("    routed to %s → task %s (%s)" % (d.get("member_id"), d.get("task_id"), d.get("state")))'
+}
+
+risk_menu() {
+    while true; do
+        clear
+        tui_menu "Risk (iN2N members)" \
+            "Overview (role · stacks · members)" \
+            "Members (scope · state · live)" \
+            "Member health (quarantine alerts)" \
+            "Enrollment token (issue single-use)" \
+            "Edge enrollment QR (NetClaw Mobile)" \
+            "Edge preflight (why can't I enroll a phone?)" \
+            "← Back" || return 0
+        case "$TUI_CHOICE" in
+            0) risk_overview; pause ;;
+            1) risk_members; pause ;;
+            2) risk_health; pause ;;
+            3) risk_token; pause ;;
+            4) risk_edge_token; pause ;;
+            5) risk_edge_check; pause ;;
+            6) return 0 ;;
+        esac
+    done
+}
+
+# ── menus ─────────────────────────────────────────────────────────
+peering_menu() {
+    while true; do
+        clear
+        tui_menu "Protocol Peering" \
+            "Overview (BGP · mesh · N2N · ngrok)" \
+            "BGP detail (sessions + RIB)" \
+            "N2N federation detail" \
+            "Ngrok tunnel (mesh transport)" \
+            "N2N chat logs" \
+            "▶ Start peering (daemon + ngrok)" \
+            "■ Stop peering (ngrok + daemon)" \
+            "Announce endpoint (relay message for peers)" \
+            "← Back" || return 0
+        case "$TUI_CHOICE" in
+            0) peering_overview; pause ;;
+            1) peering_bgp; pause ;;
+            2) peering_n2n; pause ;;
+            3) peering_ngrok; pause ;;
+            4) chats_menu ;;
+            5) peering_start_all; pause ;;
+            6) peering_stop_all; pause ;;
+            7) peer_announce; pause ;;
+            8) return 0 ;;
+        esac
+    done
+}
+
+main_menu() {
+    if ! tui_is_tty; then
+        echo "netclaw: interactive menu needs a terminal (try: netclaw help)" >&2
+        exit 1
+    fi
+    while true; do
+        clear
+        netclaw_logo
+        tui_menu "NetClaw" \
+            "Launch NetClaw TUI" \
+            "Installer (add/remove components)" \
+            "Protocol Peering (BGP · MESH · N2N)" \
+            "Risk (iN2N members)" \
+            "Exit" || exit 0
+        case "$TUI_CHOICE" in
+            0) exec "${RUNTIME_TUI[@]}" ;;
+            1) exec "$NETCLAW_ROOT/scripts/install.sh" ;;
+            2) peering_menu ;;
+            3) risk_menu ;;
+            4) exit 0 ;;
+        esac
+    done
+}
+
+# ── symlink install ───────────────────────────────────────────────
+do_link() {
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$SCRIPT_PATH" "$HOME/.local/bin/netclaw"
+    echo -e "  ${T_CYAN}linked${T_NC} ~/.local/bin/netclaw → $SCRIPT_PATH"
+}
+
+# ── entry ─────────────────────────────────────────────────────────
+case "${1:-}" in
+    "")        main_menu ;;
+    tui)       exec "${RUNTIME_TUI[@]}" ;;
+    install)   shift; exec "$NETCLAW_ROOT/scripts/install.sh" "$@" ;;
+    peering)
+        case "${2:-status}" in
+            status)   peering_overview ;;
+            bgp)      peering_bgp ;;
+            n2n)      peering_n2n ;;
+            ngrok)    peering_ngrok ;;
+            up)       peering_start_all ;;
+            down)     peering_stop_all ;;
+            announce) peer_announce ;;
+            *)        echo "Usage: netclaw peering [status|bgp|n2n|ngrok|up|down|announce]"; exit 1 ;;
+        esac ;;
+    risk)
+        case "${2:-status}" in
+            status)   risk_overview ;;
+            members)  risk_members ;;
+            health)   risk_health ;;
+            add)      risk_add "${3:-}" "${4:-}" "${5:-}" ;;
+            remove)   risk_remove "${3:-}" ;;
+            role)     risk_role "${3:-}" "${4:-}" "${5:-}" ;;
+            edge-check|edge_check|preflight) risk_edge_check ;;
+            token)
+                if [ "${3:-}" = "--edge" ]; then
+                    risk_edge_token "${4:-}"
+                else
+                    risk_token "${3:-}"
+                fi ;;
+            route)    risk_route "${3:-}" "${4:-}" ;;
+            *)        echo "Usage: netclaw risk [status|members|health|role|edge-check|add|remove|token [--edge]|route]"; exit 1 ;;
+        esac ;;
+    chats)
+        if [ "${2:-}" = "--watch" ] || [ "${2:-}" = "watch" ]; then
+            chats_watch "${3:-5}"
+        elif [ -n "${2:-}" ]; then
+            f="$CHATS_DIR/$2.txt"
+            [ -f "$f" ] || f="$(ls "$CHATS_DIR"/"$2"*.txt 2>/dev/null | head -1 || true)"
+            [ -n "$f" ] && [ -f "$f" ] || { echo "No chat session matching '$2' in $CHATS_DIR"; exit 1; }
+            chat_tail "$f"
+        else
+            chats_list || exit 0
+            echo ""
+            echo -e "  ${T_DIM}netclaw chats <id-prefix> to tail one${T_NC}"
+        fi ;;
+    link)      do_link ;;
+    help|-h|--help)
+        sed -n '2,12p' "$SCRIPT_PATH" | sed 's/^# \{0,3\}//' ;;
+    *) echo "Unknown command: $1 (try: netclaw help)"; exit 1 ;;
+esac

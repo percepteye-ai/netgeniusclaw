@@ -1,0 +1,179 @@
+/* topology-map.css — Styles for network topology visualization */
+
+.topology-map {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #FAFAFA;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Warning banner */
+.topology-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #FFF3E0;
+  border-bottom: 1px solid #FFE0B2;
+  color: #E65100;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.topology-warning__icon::before {
+  content: "\26A0";
+  font-size: 14px;
+}
+
+/* SVG Canvas */
+.topology-map__canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Cluster containers */
+.topology-cluster {
+  fill: none;
+  stroke: #9E9E9E;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  rx: 8;
+  ry: 8;
+}
+
+.topology-cluster__label {
+  fill: #616161;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+/* Edges / Links */
+.topology-edge {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.topology-edge--up {
+  stroke-opacity: 0.7;
+}
+
+.topology-edge--down {
+  stroke-opacity: 0.9;
+  stroke-dasharray: 4 3;
+}
+
+.topology-edge--unknown {
+  stroke-opacity: 0.4;
+  stroke-dasharray: 2 2;
+}
+
+.topology-edge__label {
+  fill: #757575;
+  font-size: 9px;
+  text-anchor: middle;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+/* Nodes */
+.topology-node {
+  cursor: pointer;
+}
+
+.topology-node__circle {
+  stroke-width: 2.5;
+  transition: r 0.15s ease;
+}
+
+.topology-node:hover .topology-node__circle {
+  r: 22;
+  stroke-width: 3;
+}
+
+.topology-node__label {
+  fill: #212121;
+  font-size: 11px;
+  text-anchor: middle;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.topology-node__role {
+  fill: #9E9E9E;
+  font-size: 9px;
+  text-anchor: middle;
+  font-family: inherit;
+}
+
+/* Health-based node coloring */
+.topology-node--healthy .topology-node__circle {
+  fill: #C8E6C9;
+  stroke: #2E7D32;
+}
+
+.topology-node--warning .topology-node__circle {
+  fill: #FFE0B2;
+  stroke: #E65100;
+}
+
+.topology-node--critical .topology-node__circle {
+  fill: #FFCDD2;
+  stroke: #C62828;
+}
+
+.topology-node--unknown .topology-node__circle {
+  fill: #E0E0E0;
+  stroke: #616161;
+}
+
+/* Legend overlay */
+.topology-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #E0E0E0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.topology-legend__title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #424242;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.topology-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.topology-legend__item:last-child {
+  margin-bottom: 0;
+}
+
+.topology-legend__swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid;
+  flex-shrink: 0;
+}
+
+.topology-legend__label {
+  font-size: 12px;
+  color: #424242;
+}

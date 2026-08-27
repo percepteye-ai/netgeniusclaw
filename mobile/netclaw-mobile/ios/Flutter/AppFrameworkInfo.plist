@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleExecutable</key>
+  <string>App</string>
+  <key>CFBundleIdentifier</key>
+  <string>io.flutter.flutter.app</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>App</string>
+  <key>CFBundlePackageType</key>
+  <string>FMWK</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0</string>
+  <key>CFBundleSignature</key>
+  <string>????</string>
+  <key>CFBundleVersion</key>
+  <string>1.0</string>
+  <!-- Pre-existing latent bug fix, unrelated to spec 099's own stories:
+       without this key Flutter's generated FlutterGeneratedPluginSwiftPackage/
+       Package.swift hardcodes a platform floor of iOS 13.0 regardless of
+       Runner's actual IPHONEOS_DEPLOYMENT_TARGET, which conflicts with
+       firebase_core/firebase_messaging's real minimum of iOS 15 -- Xcode only
+       enforces this on a fully fresh package-graph resolution (a persisted
+       DerivedData/SPM cache can mask it), which is exactly what CI always
+       does, so this would have broken the mobile-ci.yml gate (099 Story 4)
+       on its very first run regardless of anything else in this feature.
+       Matches Runner's actual floor (099/research.md R2). -->
+  <key>MinimumOSVersion</key>
+  <string>16.2</string>
+</dict>
+</plist>

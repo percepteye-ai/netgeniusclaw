@@ -1,0 +1,30 @@
+[project]
+name = "netclaw-memory-mcp"
+version = "0.1.0"
+description = "Hybrid Memory MCP Server for NetClaw - persistent context across sessions with structured facts, semantic search, and entity relationships"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    # Upper bounds added by spec 082. mcp 2.0 removed mcp.server.fastmcp, which this
+    # server imports; chromadb is imported by submodule. Both describe installed majors
+    # (mcp 1.28.1, chromadb 1.5.9) and move nothing.
+    "mcp>=1.2.0,<2",
+    "fastmcp",
+    "chromadb>=0.4.0,<2",
+    "sentence-transformers>=2.2.0",
+    "torch>=2.0.0",
+]
+
+[project.scripts]
+memory-mcp-server = "memory_mcp_server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]

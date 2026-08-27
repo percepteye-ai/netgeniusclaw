@@ -1,0 +1,14 @@
+# Upper bound is LOAD-BEARING, same reason as every other NetClaw FastMCP
+# server (spec 077): mcp 2.0.0 removed mcp.server.fastmcp. Do not remove.
+mcp>=1.0.0,<2
+websockets>=12.0
+python-dotenv>=1.0.0
+# Zoom's official RTMS Python SDK (research.md R4, spec 118). Confirmed
+# installable from PyPI (verified 2026-08-17) as package "rtms" — ships only
+# a cp313 (Python 3.13) wheel as of v1.1.0, no cp314 build yet, which is why
+# this server runs from its own .venv (python3.13) rather than the system
+# python3 (3.14), matching the existing venv-based-server convention used by
+# multivendor-cli-mcp/anta-mcp/zabbix-mcp. Set up with:
+#   python3.13 -m venv mcp-servers/zoom-rtms-mcp/.venv
+#   mcp-servers/zoom-rtms-mcp/.venv/bin/pip install -r requirements.txt
+rtms>=1.0.0

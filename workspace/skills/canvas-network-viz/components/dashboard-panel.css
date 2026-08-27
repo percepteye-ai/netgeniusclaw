@@ -1,0 +1,202 @@
+/* dashboard-panel.css — Styles for health dashboard panels */
+
+.dashboard-panel {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dashboard-panel__header {
+  padding: 12px 16px;
+  background: #F5F5F5;
+  border-bottom: 1px solid #E0E0E0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.dashboard-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+/* Warning banner */
+.dashboard-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #FFF3E0;
+  border-bottom: 1px solid #FFE0B2;
+  color: #E65100;
+  font-size: 13px;
+}
+
+/* Individual panel card */
+.dashboard-card {
+  background: #FFFFFF;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 120px;
+}
+
+.dashboard-card__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #616161;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+/* Gauge display */
+.dashboard-gauge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-gauge__value {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dashboard-gauge__unit {
+  font-size: 14px;
+  color: #9E9E9E;
+  font-weight: 400;
+}
+
+.dashboard-gauge__bar {
+  width: 100%;
+  height: 8px;
+  background: #E0E0E0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.dashboard-gauge__fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Threshold coloring */
+.dashboard-gauge--healthy .dashboard-gauge__value { color: #2E7D32; }
+.dashboard-gauge--healthy .dashboard-gauge__fill { background: #2E7D32; }
+
+.dashboard-gauge--warning .dashboard-gauge__value { color: #E65100; }
+.dashboard-gauge--warning .dashboard-gauge__fill { background: #E65100; }
+
+.dashboard-gauge--critical .dashboard-gauge__value { color: #C62828; }
+.dashboard-gauge--critical .dashboard-gauge__fill { background: #C62828; }
+
+/* Counter display */
+.dashboard-counter {
+  text-align: center;
+}
+
+.dashboard-counter__value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #212121;
+}
+
+/* Status list */
+.dashboard-status-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dashboard-status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #F5F5F5;
+  font-size: 13px;
+}
+
+.dashboard-status-item:last-child {
+  border-bottom: none;
+}
+
+.dashboard-status-item__indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dashboard-status-item--up .dashboard-status-item__indicator { background: #2E7D32; }
+.dashboard-status-item--down .dashboard-status-item__indicator { background: #C62828; }
+.dashboard-status-item--warning .dashboard-status-item__indicator { background: #E65100; }
+.dashboard-status-item--unknown .dashboard-status-item__indicator { background: #9E9E9E; }
+
+.dashboard-status-item__name {
+  font-weight: 500;
+  color: #212121;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-status-item__detail {
+  color: #9E9E9E;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+/* Sparkline container */
+.dashboard-sparkline {
+  width: 100%;
+  height: 40px;
+}
+
+.dashboard-sparkline svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Multi-device summary grid */
+.dashboard-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  padding: 16px;
+}
+
+.dashboard-summary-card {
+  background: #FFFFFF;
+  border: 1px solid #E0E0E0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.dashboard-summary-card__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #212121;
+  margin-bottom: 4px;
+}
+
+.dashboard-summary-card__indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}

@@ -1,0 +1,134 @@
+import {
+  CopyShader
+} from "./chunk-YZ7RHIIL.js";
+import {
+  FullScreenQuad,
+  Pass
+} from "./chunk-6ND65Z63.js";
+import {
+  HalfFloatType,
+  NearestFilter,
+  NoBlending,
+  ShaderMaterial,
+  UniformsUtils,
+  WebGLRenderTarget
+} from "./chunk-7ZCAHXB5.js";
+
+// node_modules/three/examples/jsm/shaders/AfterimageShader.js
+var AfterimageShader = {
+  name: "AfterimageShader",
+  uniforms: {
+    "damp": { value: 0.96 },
+    "tOld": { value: null },
+    "tNew": { value: null }
+  },
+  vertexShader: (
+    /* glsl */
+    `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`
+  ),
+  fragmentShader: (
+    /* glsl */
+    `
+
+		uniform float damp;
+
+		uniform sampler2D tOld;
+		uniform sampler2D tNew;
+
+		varying vec2 vUv;
+
+		vec4 when_gt( vec4 x, float y ) {
+
+			return max( sign( x - y ), 0.0 );
+
+		}
+
+		void main() {
+
+			vec4 texelOld = texture2D( tOld, vUv );
+			vec4 texelNew = texture2D( tNew, vUv );
+
+			texelOld *= damp * when_gt( texelOld, 0.1 );
+
+			gl_FragColor = max(texelNew, texelOld);
+
+		}`
+  )
+};
+
+// node_modules/three/examples/jsm/postprocessing/AfterimagePass.js
+var AfterimagePass = class extends Pass {
+  constructor(damp = 0.96) {
+    super();
+    this.shader = AfterimageShader;
+    this.uniforms = UniformsUtils.clone(this.shader.uniforms);
+    this.uniforms["damp"].value = damp;
+    this.textureComp = new WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+      magFilter: NearestFilter,
+      type: HalfFloatType
+    });
+    this.textureOld = new WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+      magFilter: NearestFilter,
+      type: HalfFloatType
+    });
+    this.compFsMaterial = new ShaderMaterial({
+      uniforms: this.uniforms,
+      vertexShader: this.shader.vertexShader,
+      fragmentShader: this.shader.fragmentShader
+    });
+    this.compFsQuad = new FullScreenQuad(this.compFsMaterial);
+    const copyShader = CopyShader;
+    this.copyFsMaterial = new ShaderMaterial({
+      uniforms: UniformsUtils.clone(copyShader.uniforms),
+      vertexShader: copyShader.vertexShader,
+      fragmentShader: copyShader.fragmentShader,
+      blending: NoBlending,
+      depthTest: false,
+      depthWrite: false
+    });
+    this.copyFsQuad = new FullScreenQuad(this.copyFsMaterial);
+  }
+  render(renderer, writeBuffer, readBuffer) {
+    this.uniforms["tOld"].value = this.textureOld.texture;
+    this.uniforms["tNew"].value = readBuffer.texture;
+    renderer.setRenderTarget(this.textureComp);
+    this.compFsQuad.render(renderer);
+    this.copyFsQuad.material.uniforms.tDiffuse.value = this.textureComp.texture;
+    if (this.renderToScreen) {
+      renderer.setRenderTarget(null);
+      this.copyFsQuad.render(renderer);
+    } else {
+      renderer.setRenderTarget(writeBuffer);
+      if (this.clear) renderer.clear();
+      this.copyFsQuad.render(renderer);
+    }
+    const temp = this.textureOld;
+    this.textureOld = this.textureComp;
+    this.textureComp = temp;
+  }
+  setSize(width, height) {
+    this.textureComp.setSize(width, height);
+    this.textureOld.setSize(width, height);
+  }
+  dispose() {
+    this.textureComp.dispose();
+    this.textureOld.dispose();
+    this.compFsMaterial.dispose();
+    this.copyFsMaterial.dispose();
+    this.compFsQuad.dispose();
+    this.copyFsQuad.dispose();
+  }
+};
+export {
+  AfterimagePass
+};
+//# sourceMappingURL=three_addons_postprocessing_AfterimagePass__js.js.map
