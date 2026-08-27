@@ -1,0 +1,2 @@
+# The flywheel SDK. One runtime dependency of its own (httpx), by design.
+percepteye-agent-flywheel>=0.1.0

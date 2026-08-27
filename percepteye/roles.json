@@ -1,0 +1,19 @@
+{
+  "_README": [
+    "Which tools play which part, for decisions.py. DECLARED, never sniffed:",
+    "which tool is a 'write' is a fact about this tool set, not about the grader.",
+    "A rule with nothing declared for it abstains rather than guessing.",
+    "Globs are matched with fnmatch."
+  ],
+  "read":           ["run_command", "show_*", "list_devices", "check_device_readiness",
+                     "suzieq_*", "bf_*", "analysis_*"],
+  "write":          ["run_config*", "pyats_configure", "*_configure", "*_apply"],
+  "baseline":       ["capture_baseline", "*_baseline"],
+  "verify":         ["run_command", "verify_*", "suzieq_*"],
+  "change_request": ["snow_create_cr", "*_create_cr"],
+  "audit":          ["gait_*"],
+  "destructive_args": [
+    "\\bwrite erase\\b", "\\breload\\b", "\\bformat\\b",
+    "\\berase startup-config\\b", "\\bdelete /force\\b"
+  ]
+}

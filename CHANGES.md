@@ -151,12 +151,33 @@ not say is not a rename. A bulk pass garbled it and it was restored verbatim.
 **`.gitignore`'s `.claude` entry**, which stops a contributor's local tooling
 directory being committed. Removing it causes the thing it prevents.
 
-## What is NOT in this fork
+## 6. The agent flywheel, integrated
 
-The Percepteye agent-flywheel integration — the MCP outcome shim, the config
-projection, the decision-rule grader — is **not** here. It is a separate body of
-work that modifies no NetGeniusClaw source, and mixing an unrelated feature into
-a licensing-and-rebrand import would make both harder to review.
+`percepteye/` adds continual learning: tool outcomes are observed at the MCP
+transport as `ok` / `failed` / **`unknown`**, the agent's decisions are graded
+against this repo's own `AGENTS.md` safety rules, and a trained policy can be
+applied back to `config/openclaw.json`.
 
-The README now describes the agent as running on an open-weights model, which
-is what this fork's shipped config actually does — see §5.
+It **modifies no existing source**. The projection opens `config/openclaw.json`
+read-only and writes a derived copy into the rollout's own directory; the
+customer's config is never touched. Everything new lives under `percepteye/`.
+
+One piece is knowingly out of place: `percepteye/mcp_shim.py` belongs in the SDK
+as `percepteye_agent_flywheel.mcp_shim` and is written to move there unchanged.
+It is vendored here so this repo has a working integration in the meantime, and
+its docstring says so — it already *depends* on the SDK for `record_tool_call`,
+so this duplicates a file, not a contract.
+
+Two defects were found by the tests written alongside it, and both are recorded
+in the suite: the shim deadlocked on stdin EOF, hanging every rollout to its full
+deadline; and the decision rules scored an agent that did **nothing** at 1.00,
+because two "absence of bad behaviour" rules passed with no opportunity to
+misbehave. 37 tests, both modules mutation-tested.
+
+## Note on the order these landed
+
+§1-§4 were the licensing-and-rebrand import and went in first, on their own.
+§5 (open weights) and §6 (the flywheel) followed as separate commits, so each is
+reviewable without the others. The flywheel was deliberately held back from the
+import for exactly that reason; it is in now, under `percepteye/`, and adds no
+change to any file that existed before it.

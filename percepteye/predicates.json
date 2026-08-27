@@ -1,0 +1,59 @@
+{
+  "_README": [
+    "Per-tool verdict predicates for the NetClaw triage claw.",
+    "`fail` beats `ok_if_no_fail`. Absent an entry, a transport-clean result is",
+    "recorded `unknown` and is NEVER rounded up to ok.",
+    "Each entry below carries its provenance. Anything marked NEEDS-LIVE is a",
+    "declaration that has not yet been checked against a captured body -- treat",
+    "it as unverified until Phase 1 produces one."
+  ],
+
+  "_provenance.multivendor": [
+    "VERIFIED FROM SOURCE. mcp-servers/multivendor-cli-mcp/server.py:148 and :177",
+    "SWALLOW their exceptions and return {\"status\": \"error\"|\"not_found\", ...}.",
+    "Those calls return cleanly, so MCP reports isError:false and a transcript",
+    "scorer reads a failed call as a landed one. This is the shape the whole",
+    "tri-state exists for."
+  ],
+  "list_devices":           {"fail": ["\"status\"\\s*:\\s*\"(error|not_found)\""], "ok_if_no_fail": true},
+  "check_device_readiness": {"fail": ["\"status\"\\s*:\\s*\"(error|not_found)\""], "ok_if_no_fail": true},
+
+  "_provenance.cli": [
+    "NEEDS-LIVE. Device CLI rejects the command and the transport is still clean:",
+    "the session opened, the command was delivered, the box refused it. Patterns",
+    "are the standard IOS/NX-OS/JunOS/FRR rejection strings; confirm each against",
+    "a real captured body before trusting an `ok` from this entry."
+  ],
+  "run_command": {
+    "fail": [
+      "% Invalid input detected",
+      "% Incomplete command",
+      "% Ambiguous command",
+      "% Unknown command",
+      "^\\s*syntax error",
+      "\"status\"\\s*:\\s*\"(error|not_found)\"",
+      "Authentication failed",
+      "Connection refused",
+      "Connection timed out"
+    ],
+    "ok_if_no_fail": true
+  },
+
+  "_provenance.batfish": [
+    "PARTLY VERIFIED. batfish_mcp_server.py RAISES on its hard failures",
+    "(ConnectionError/ValueError at :94,:195,:211,:220,:224,:233), which surface",
+    "as isError:true and need no predicate. The SOFT one does need it: :360",
+    "appends 'Configuration file could not be parsed' into a normal result."
+  ],
+  "bf_*": {
+    "fail": ["Configuration file could not be parsed", "\\bTraceback \\(most recent call last\\)"],
+    "ok_if_no_fail": true
+  },
+
+  "_provenance.unlisted": [
+    "Every other tool in the claw -- suzieq, protocol, analysis, memory, gait --",
+    "is deliberately absent. They abstain as `unknown` until someone reads a real",
+    "body and writes a predicate. An absent entry costs reward surface; a wrong",
+    "one costs training correctness."
+  ]
+}

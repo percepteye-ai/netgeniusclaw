@@ -103,6 +103,31 @@ a `len/4` estimate and marks the result `estimated`. Cost defaults to **zero**,
 which is the truth for a model you host — declare
 `NETCLAW_TOKEN_PRICING_OVERRIDE` if your endpoint bills per token.
 
+### Self-improving — the agent flywheel
+
+NetGeniusClaw ships integrated with
+[percepteye-agent-flywheel](https://pypi.org/project/percepteye-agent-flywheel/),
+which turns the work the agent already does into training data and delivers what
+it learns back as the endpoint it already calls.
+
+The premise is that an agent's decisions live in its **tool-call sequence**, not
+its prose — did it run a `show` before touching config, capture a baseline,
+refuse the destructive command, verify afterwards? Those are the safety rules in
+[AGENTS.md](AGENTS.md), and each one is a predicate over what it actually
+called. Every tool call is recorded `ok` / `failed` / **`unknown`**, and
+`unknown` is never rounded up to `ok`.
+
+```bash
+pip install -r percepteye/requirements.txt
+./percepteye/capture.py --tasks percepteye/tasks/triage.json \
+    --roles percepteye/roles.json --out runs/$(date +%F)
+```
+
+That much needs **no control plane, no gateway and no GPU** — it grades the
+agent's decisions against the local FRR lab and gives you a regression suite.
+Donating capacity for training and picking up a trained policy are two more
+commands. **See [percepteye/README.md](percepteye/README.md).**
+
 ### Agent runtime — OpenClaw or Hermes
 
 NetGeniusClaw runs on top of an agent runtime. **OpenClaw** is the default and the
