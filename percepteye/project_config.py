@@ -28,9 +28,38 @@ Schema verified against openclaw 2026.7.1-2's own docs, not assumed:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
+import pathlib
+import re
 import sys
+
+
+def _load_needs_cwd():
+    """NetClaw's own cwd predicate, reused rather than restated.
+
+    Two copies of "does this entry need a cwd?" would drift, and the failure
+    when they do is silent: a server that will not start is indistinguishable
+    from one that has no tools. Loaded by path because the script's filename
+    contains hyphens and cannot be imported by name.
+    """
+    path = (pathlib.Path(__file__).resolve().parent.parent
+            / "scripts" / "normalize-mcp-cwd.py")
+    spec = importlib.util.spec_from_file_location("_netclaw_mcp_cwd", path)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.needs_cwd
+
+
+try:
+    needs_cwd = _load_needs_cwd()
+except (OSError, AttributeError, ImportError):
+    # The projection still works; entries just keep whatever cwd they had,
+    # and the report records that the pass did not run.
+    needs_cwd = None
 
 # ── Servers that speak the wire our gateway speaks ────────────────────────
 # `api` is OpenClaw's provider discriminator. `openai-completions` is the one
@@ -50,19 +79,34 @@ SERVERS = {
     "percepteye": {"base_url": None, "key_env": "OPENAI_API_KEY"},  # per-rollout, always explicit
 }
 
-#: A read-only triage claw. NetClaw registers 104 MCP servers; a small
-#: open-weights model handed all of them spends its whole context on a tool
-#: catalogue it cannot use. This is the "member claw" scope -- every entry
-#: below runs entirely on your own box, with no SaaS credential.
+#: A read-only triage claw. NetClaw registers a hundred-odd MCP servers; a
+#: small open-weights model handed all of them spends its whole context on a
+#: tool catalogue it cannot use. This is the "member claw" scope.
+#:
+#: THE RULE FOR THIS LIST: every entry runs entirely on this box and needs no
+#: SaaS credential. That was already the stated rule and two entries broke it,
+#: which is why each line now says what makes it local. A server that cannot
+#: start contributes nothing to the catalogue AND is indistinguishable, in the
+#: generated workflows, from a tool the agent simply chose not to call.
+#:
+#: REMOVED 2026-08-29, both verified by executing them:
+#:   suzieq-mcp  refuses to start without SUZIEQ_API_URL and SUZIEQ_API_KEY
+#:               ("Missing required environment variables"). It is a client for
+#:               a separately-hosted SuzieQ service, not a local tool, and the
+#:               placeholders for those keys resolved EMPTY.
+#:   gait-mcp    its server package `mcp-servers/gait_mcp/` does not exist in
+#:               this fork. `scripts/gait-stdio.py` inserts that directory on
+#:               sys.path and imports `gait_mcp` from it, so the server dies
+#:               with ModuleNotFoundError no matter how the venv is set up.
+#:               Installing the GAIT venv (which this session did) fixes the
+#:               `gait` import and gets you exactly one line further.
 TRIAGE_TOOLS = [
-    "multivendor-cli-mcp",  # netmiko/pyATS against the FRR+sshd lab container
+    "multivendor-cli-mcp",  # netmiko/pyATS against the local FRR+sshd lab container
     "batfish-mcp",          # offline config analysis; the strongest local verifier
-    "suzieq-mcp",           # network state over time
-    "protocol-mcp",         # BGP/OSPF participation against the FRR testbed
-    "analysis-mcp",
-    "packet-buddy-mcp",     # local pcap, no device needed
-    "memory-mcp",
-    "gait-mcp",             # the audit trail NetClaw's rules require
+    "protocol-mcp",         # BGP/OSPF participation against the local FRR testbed
+    "analysis-mcp",         # queries local files only
+    "packet-buddy-mcp",     # local pcap, no device and no credential
+    "memory-mcp",           # a local SQLite store
 ]
 
 
@@ -83,13 +127,87 @@ def _wrap_with_shim(entry: dict, *, shim_python: str, shim_path: str,
     if "command" not in entry:
         return None
     out = dict(entry)
-    inner = [str(entry["command"]), *(str(a) for a in entry.get("args") or [])]
+    command = str(entry["command"])
+    # A bare `python3` resolves to whatever is first on PATH -- the SYSTEM
+    # interpreter, which has none of this project's dependencies. Every server
+    # spelled that way died at import with `No module named 'mcp'` and the
+    # host reported only `MCP error -32000: Connection closed`, so the agent
+    # came up with the framework's built-in tools alone. That failure is the
+    # dangerous shape: a plausible catalogue that is the wrong one, which no
+    # downstream gate can tell from a real one.
+    #
+    # Rewritten here rather than in the repo's config so no absolute path off
+    # one machine is committed. A server that names its own interpreter (an
+    # explicit venv, node, uvx, docker) is left exactly as it was.
+    if command in ("python", "python3"):
+        command = shim_python
+    inner = [command, *(str(a) for a in entry.get("args") or [])]
     args = [shim_path]
     if predicates:
         args += ["--predicates", predicates]
     out["command"] = shim_python
     out["args"] = [*args, "--", *inner]
     return out
+
+
+_ENV_PLACEHOLDER = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}")
+
+
+def _expand_env_value(value: str, source: dict) -> tuple[str, bool]:
+    """Expand ``${NAME}`` / ``${NAME:-default}`` and a leading ``~``.
+
+    THE HOST SPAWNS MCP SERVERS DIRECTLY, WITHOUT A SHELL. So a config value
+    written in shell syntax arrives at the server VERBATIM, and what happens
+    next depends only on what the server does with it:
+
+      * a server that parses it dies -- ``int('${BATFISH_PORT:-9997}')``
+        raises, the host reports "MCP error -32000: Connection closed" with no
+        cause, and the agent comes up without that tool;
+      * a server that does NOT parse it survives and is WORSE, because it
+        quietly uses the literal string -- the memory server took
+        ``${MEMORY_DATA_DIR:-~/.openclaw/memory}`` as a directory NAME and
+        created it.
+
+    Returns the expanded value and whether anything was substituted.
+    """
+    changed = False
+
+    def _sub(m: "re.Match[str]") -> str:
+        nonlocal changed
+        changed = True
+        name, default = m.group(1), m.group(2)
+        return source.get(name) or (default if default is not None else "")
+
+    out = _ENV_PLACEHOLDER.sub(_sub, value)
+    if out.startswith("~"):
+        expanded = os.path.expanduser(out)
+        changed = changed or expanded != out
+        out = expanded
+    return out, changed
+
+
+def _expand_server_env(servers: dict) -> dict:
+    """Expand every server's ``env`` in place; report what moved."""
+    expanded, emptied = [], []
+    for name, entry in servers.items():
+        env = entry.get("env") if isinstance(entry, dict) else None
+        if not isinstance(env, dict):
+            continue
+        for key, value in list(env.items()):
+            if not isinstance(value, str):
+                continue
+            new, changed = _expand_env_value(value, os.environ)
+            if not changed:
+                continue
+            env[key] = new
+            expanded.append(f"{name}.{key}")
+            # An empty result is not the same as a successful expansion: it
+            # means neither the environment nor a default supplied anything,
+            # and the server will see "". Named so a thin trajectory can be
+            # explained rather than guessed at.
+            if new == "":
+                emptied.append(f"{name}.{key}")
+    return {"expanded": len(expanded), "resolved_empty": sorted(emptied)}
 
 
 def _tools_key(cfg: dict) -> tuple[str, dict] | tuple[None, None]:
@@ -112,10 +230,38 @@ def project(
     cfg: dict, *, provider: str, base_url: str, key: str, model: str,
     ctx: int, max_tokens: int, keep_tools: list[str] | None,
     shim_python: str | None = None, shim_path: str | None = None,
-    predicates: str | None = None,
+    predicates: str | None = None, plugin_path: str | None = None,
+    repo_root: str | None = None,
 ) -> tuple[dict, dict]:
     """Return (derived config, a report of what changed)."""
     report: dict = {}
+
+    # ── 0. the flywheel plugin ────────────────────────────────────────────
+    # This run redirects OPENCLAW_STATE_DIR to its own home, and a redirected
+    # state directory stops the host discovering globally installed plugins
+    # ("plugin not found … stale config entry ignored"). So the path has to be
+    # named here or the plugin is simply absent from every rollout.
+    #
+    # `allowConversationAccess` is the second half and is just as load-bearing:
+    # `llm_input` is a CONVERSATION hook, and the host silently REFUSES to
+    # register one for a non-bundled plugin without this opt-in. Without it the
+    # plugin loads, the tool-outcome recorder works, and the agent is never
+    # described -- a failure that looks exactly like a healthy install.
+    if plugin_path:
+        plugins = cfg.setdefault("plugins", {})
+        paths = plugins.setdefault("load", {}).setdefault("paths", [])
+        if plugin_path not in paths:
+            paths.append(plugin_path)
+        plugins.setdefault("entries", {})["percepteye-agent-flywheel"] = {
+            "enabled": True,
+            "hooks": {"allowConversationAccess": True},
+        }
+        report["flywheel_plugin"] = plugin_path
+    else:
+        # Recorded, never silent: a rollout with no plugin produces no tool
+        # outcomes and no description, and the report is where that gets
+        # explained afterwards.
+        report["flywheel_plugin"] = None
 
     # ── 1. register the provider ──────────────────────────────────────────
     cfg.setdefault("models", {}).setdefault("providers", {})[provider] = {
@@ -199,6 +345,36 @@ def project(
                         if isinstance(v, dict) and "command" not in v)
         in_scope = [k for k in remote if keep_tools is None or k in set(keep_tools)]
         report["unshimmable_remote_in_scope"] = in_scope
+
+    # ── 7. give every relative-path server an explicit cwd ────────────────
+    # The host does NOT spawn MCP servers in the directory it was launched
+    # from, so an entry whose script path is relative ("mcp-servers/x/y.py")
+    # resolves against the wrong directory and dies. The host reports only
+    # "MCP error -32000: Connection closed", and the agent then comes up with
+    # the framework's BUILT-IN tools alone -- a catalogue that is complete,
+    # plausible, and the wrong one.
+    #
+    # `needs_cwd` is NetClaw's own predicate (scripts/normalize-mcp-cwd.py),
+    # reused rather than restated so the two cannot drift. Entries that
+    # already declare a cwd, or that name only absolute paths, are untouched.
+    key_name, servers = _tools_key(cfg)
+    if repo_root and servers is not None and needs_cwd is not None:
+        repo = pathlib.Path(repo_root).resolve()
+        scoped = []
+        for k, v in servers.items():
+            if isinstance(v, dict) and needs_cwd(v, repo):
+                v["cwd"] = str(repo)
+                scoped.append(k)
+        report["cwd_scoped"] = sorted(scoped)
+    elif repo_root and needs_cwd is None:
+        report["cwd_scoped"] = None      # the pass could not run; not "none needed"
+
+    # ── 8. expand shell-style env placeholders ────────────────────────────
+    # Done LAST so it covers whatever survived scoping, and after wrapping so
+    # the shim's own argv is already settled. See `_expand_env_value` for why
+    # leaving these literal is worse than a crash.
+    if servers is not None:
+        report["env_expansion"] = _expand_server_env(servers)
 
     return cfg, report
 

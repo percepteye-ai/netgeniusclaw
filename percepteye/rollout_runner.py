@@ -29,7 +29,12 @@ REPO = HERE.parent
 sys.path.insert(0, str(HERE))
 
 from capture import extract_reply          # noqa: E402
+from describe_tools import enrich, is_describe_pass  # noqa: E402
 from project_config import project         # noqa: E402
+
+from percepteye_agent_flywheel.host_description import (  # noqa: E402
+    openclaw_plugin_path,
+)
 
 #: Provider credentials removed from the child. The SDK strips the ones it
 #: knows; this covers the agent's own config path, which it cannot see. An agent
@@ -71,6 +76,13 @@ def main() -> int:
         keep_tools=_tool_scope(),
         shim_python=sys.executable, shim_path=str(HERE / "mcp_shim.py"),
         predicates=str(HERE / "predicates.json"),
+        # Resolved from the SDK rather than hardcoded, so no absolute path
+        # off one machine ends up committed to this repo.
+        plugin_path=openclaw_plugin_path(),
+        # The host spawns MCP servers from its own directory, not this one,
+        # so every relative script path needs an explicit cwd or the server
+        # dies with only "Connection closed" to show for it.
+        repo_root=str(REPO),
     )
     cfg_path = home / "openclaw.json"
     cfg_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
@@ -96,6 +108,21 @@ def main() -> int:
                               "PERCEPTEYE_ROLLOUT_TIMEOUT_S", "870")))
     if proc.stderr:
         sys.stderr.write(proc.stderr)
+
+    # On a DESCRIBE pass, add what the host's hook structurally cannot see.
+    # `llm_input.tools` carries the built-in tools only -- MCP tools are
+    # bridged in after the hook -- so a description left as-is would name a
+    # general-purpose coding assistant rather than this agent. See
+    # describe_tools.py. Never on a graded rollout: it costs a spawn per
+    # server, and the description is already registered by then.
+    described = pathlib.Path(traj) / "discovered_agent.json"
+    if is_describe_pass() and described.is_file():
+        merged = enrich(described, cfg_path)
+        if merged is not None:
+            n = merged.get("tool_definitions") or []
+            print(f"[percepteye] description enriched: {len(n)} tool(s) total",
+                  file=sys.stderr)
+
     reply = extract_reply(proc.stdout)
     if reply is None:
         # Say nothing rather than echo the raw envelope: a report whose final
