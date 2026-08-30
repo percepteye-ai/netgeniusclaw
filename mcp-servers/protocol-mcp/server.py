@@ -20,6 +20,7 @@ import sys
 from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 # Add netclaw_tokens to path for GCF serialization
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "src"))
@@ -180,7 +181,7 @@ async def _daemon_post(path: str, body: dict) -> Optional[dict]:
     return None
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def bgp_get_peers() -> str:
     """List BGP peer sessions with state, AS, IP, uptime, and prefix counts.
 
@@ -212,7 +213,7 @@ async def bgp_get_peers() -> str:
     return _gcf_dumps({"peers": peers, "count": len(peers), "source": "in-process speaker"})
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def bgp_get_rib(prefix: Optional[str] = None) -> str:
     """Query the Loc-RIB. Optionally filter by prefix (e.g. '10.0.0.0/24').
 
@@ -231,7 +232,7 @@ async def bgp_get_rib(prefix: Optional[str] = None) -> str:
     return _gcf_dumps({"routes": routes, "count": len(routes), "source": "in-process speaker"})
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 async def bgp_inject_route(
     network: str,
     next_hop: Optional[str] = None,
@@ -267,7 +268,7 @@ async def bgp_inject_route(
     return _gcf_dumps(result)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 async def bgp_withdraw_route(network: str) -> str:
     """Withdraw a route from the BGP RIB.
 
@@ -285,7 +286,7 @@ async def bgp_withdraw_route(network: str) -> str:
     return _gcf_dumps(result)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 async def bgp_adjust_local_pref(network: str, local_pref: int) -> str:
     """Change the LOCAL_PREF for a route in the RIB.
 
@@ -302,7 +303,7 @@ async def bgp_adjust_local_pref(network: str, local_pref: int) -> str:
 
 # ── OSPF tools ─────────────────────────────────────────────────────────────
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def ospf_get_neighbors() -> str:
     """List OSPF neighbors with state, address, priority, and router ID."""
     await _ensure_init()
@@ -312,7 +313,7 @@ async def ospf_get_neighbors() -> str:
     return _gcf_dumps({"neighbors": neighbors, "count": len(neighbors)})
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def ospf_get_lsdb() -> str:
     """Query the OSPF Link State Database (LSDB)."""
     await _ensure_init()
@@ -322,7 +323,7 @@ async def ospf_get_lsdb() -> str:
     return _gcf_dumps({"lsdb": lsas, "count": len(lsas)})
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 async def ospf_adjust_cost(interface: str, cost: int) -> str:
     """Change the OSPF cost on an interface.
 
@@ -340,7 +341,7 @@ async def ospf_adjust_cost(interface: str, cost: int) -> str:
 
 # ── GRE tools ──────────────────────────────────────────────────────────────
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def gre_tunnel_status() -> str:
     """Check GRE tunnel status via system commands (ip tunnel show, ip addr show)."""
     tunnels = []
@@ -374,7 +375,7 @@ async def gre_tunnel_status() -> str:
 
 # ── Meta tools ─────────────────────────────────────────────────────────────
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def protocol_summary() -> str:
     """Consolidated BGP + OSPF + GRE state summary."""
     await _ensure_init()

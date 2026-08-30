@@ -15,6 +15,9 @@ import tempfile
 from pathlib import Path
 
 from fastmcp import FastMCP
+# fastmcp does not re-export this; it lives in the protocol types package,
+# which fastmcp depends on. Verified against fastmcp 3.4.7.
+from mcp.types import ToolAnnotations
 
 PCAP_DIR = Path(os.environ.get("PCAP_UPLOAD_DIR", "/tmp/netclaw-pcaps"))
 PCAP_DIR.mkdir(parents=True, exist_ok=True)
@@ -52,7 +55,7 @@ def _run_tshark(pcap_path: str, args: list[str], max_lines: int = 500) -> str:
         return "Error: tshark not installed. Install with: apt install tshark"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def list_pcaps() -> str:
     """List all pcap files available for analysis."""
     pcaps = sorted(PCAP_DIR.glob("*.pcap*"))
@@ -70,7 +73,7 @@ async def list_pcaps() -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_summary(pcap_file: str) -> str:
     """Get a high-level summary of a pcap file: packet count, duration, protocols.
 
@@ -88,7 +91,7 @@ async def pcap_summary(pcap_file: str) -> str:
     return _run_tshark(pcap_path, ["-qz", "io,stat,0"])
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_protocol_hierarchy(pcap_file: str) -> str:
     """Show the protocol hierarchy (breakdown by protocol) in a pcap.
 
@@ -99,7 +102,7 @@ async def pcap_protocol_hierarchy(pcap_file: str) -> str:
     return _run_tshark(pcap_path, ["-qz", "io,phs"])
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_conversations(pcap_file: str, layer: str = "ip") -> str:
     """Show network conversations (who talked to whom).
 
@@ -114,7 +117,7 @@ async def pcap_conversations(pcap_file: str, layer: str = "ip") -> str:
     return _run_tshark(pcap_path, ["-qz", f"conv,{layer}"])
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_endpoints(pcap_file: str, layer: str = "ip") -> str:
     """Show top endpoints by traffic volume.
 
@@ -129,7 +132,7 @@ async def pcap_endpoints(pcap_file: str, layer: str = "ip") -> str:
     return _run_tshark(pcap_path, ["-qz", f"endpoints,{layer}"])
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_filter(
     pcap_file: str, display_filter: str, max_packets: int = 100
 ) -> str:
@@ -146,7 +149,7 @@ async def pcap_filter(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_packet_detail(
     pcap_file: str, packet_number: int
 ) -> str:
@@ -164,7 +167,7 @@ async def pcap_packet_detail(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_dns_queries(pcap_file: str) -> str:
     """Extract all DNS queries and responses from a pcap.
 
@@ -182,7 +185,7 @@ async def pcap_dns_queries(pcap_file: str) -> str:
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_http_requests(pcap_file: str) -> str:
     """Extract HTTP request methods, URIs, and hosts from a pcap.
 
@@ -202,7 +205,7 @@ async def pcap_http_requests(pcap_file: str) -> str:
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_to_json(
     pcap_file: str, display_filter: str = "", max_packets: int = 20
 ) -> str:
@@ -220,7 +223,7 @@ async def pcap_to_json(
     return _run_tshark(pcap_path, args, max_lines=2000)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 async def pcap_expert_info(pcap_file: str) -> str:
     """Show tshark expert info — warnings, errors, notes about the capture.
 
@@ -231,7 +234,7 @@ async def pcap_expert_info(pcap_file: str) -> str:
     return _run_tshark(pcap_path, ["-qz", "expert"])
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 async def save_pcap_from_base64(filename: str, base64_data: str) -> str:
     """Save a base64-encoded pcap file to the analysis directory.
 

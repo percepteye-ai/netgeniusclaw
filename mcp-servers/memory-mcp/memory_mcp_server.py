@@ -49,6 +49,9 @@ except ImportError:
         log.error("FastMCP not found. Install with: pip install mcp fastmcp")
         raise
 
+# The protocol types package, which both FastMCP distributions depend on;
+from mcp.types import ToolAnnotations
+
 # ---------------------------------------------------------------------
 # Storage backends
 # ---------------------------------------------------------------------
@@ -116,7 +119,7 @@ def gait_log(operation: str, identifier: str) -> None:
 # ---------------------------------------------------------------------
 # MCP Tools: Facts (User Story 1)
 # ---------------------------------------------------------------------
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def memory_record_fact(
     entity: str,
     key: str,
@@ -146,7 +149,7 @@ def memory_record_fact(
     return result
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def memory_get_facts(
     entity: str,
     key: Optional[str] = None,
@@ -167,7 +170,7 @@ def memory_get_facts(
 # ---------------------------------------------------------------------
 # MCP Tools: Fact Lifecycle (User Story 5)
 # ---------------------------------------------------------------------
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def memory_invalidate(
     fact_id: str,
     reason: str,
@@ -193,7 +196,7 @@ def memory_invalidate(
     return result
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def memory_timeline(
     entity: str,
     after: Optional[str] = None,
@@ -218,7 +221,7 @@ def memory_timeline(
 # ---------------------------------------------------------------------
 # MCP Tools: Semantic Search (User Story 2)
 # ---------------------------------------------------------------------
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def memory_store_session(
     summary: str,
     entities: Optional[List[str]] = None,
@@ -249,7 +252,7 @@ def memory_store_session(
     return result
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def memory_recall(
     query: str,
     top_k: int = 5,
@@ -279,7 +282,7 @@ def memory_recall(
 # ---------------------------------------------------------------------
 # MCP Tools: Decisions (User Story 3)
 # ---------------------------------------------------------------------
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def memory_record_decision(
     context: str,
     decision: str,
@@ -313,7 +316,7 @@ def memory_record_decision(
     return result
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def memory_get_decisions(
     entity: Optional[str] = None,
     after: Optional[str] = None,
@@ -338,7 +341,7 @@ def memory_get_decisions(
 # ---------------------------------------------------------------------
 # MCP Tools: Graph Links (User Story 4)
 # ---------------------------------------------------------------------
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def memory_link_entities(
     subject: str,
     predicate: str,
@@ -374,7 +377,7 @@ def memory_link_entities(
     return result
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def memory_query_graph(
     entity: str,
     direction: str = "both",

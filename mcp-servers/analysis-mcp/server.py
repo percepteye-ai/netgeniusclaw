@@ -28,6 +28,7 @@ import os
 import sys
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -92,7 +93,7 @@ def _ensure() -> Sandbox:
     return sb
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def analysis_status() -> dict:
     """Report what this surface can see, what it deliberately cannot, and why.
 
@@ -121,7 +122,7 @@ def analysis_status() -> dict:
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def analysis_datasets() -> dict:
     """List the loaded tables with their row counts, source paths and columns.
 
@@ -143,7 +144,7 @@ def analysis_datasets() -> dict:
                      notes=_notes or None)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def analysis_query(sql: str, max_rows: int | None = None) -> dict:
     """Run one read-only SQL query against the loaded datasets.
 

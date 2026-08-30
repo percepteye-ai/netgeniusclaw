@@ -43,6 +43,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from mcp.server.fastmcp import FastMCP  # noqa: E402
+from mcp.types import ToolAnnotations
 
 import routing  # noqa: E402
 from credentials import CredentialError, resolve as resolve_credential  # noqa: E402
@@ -78,7 +79,7 @@ def current_mode() -> Mode:
     return Mode.WRITE_ENABLED if write_enabled() else Mode.READ_ONLY
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def server_info() -> dict:
     """Report this server's identity, mode, and platform-policy coverage.
 
@@ -108,7 +109,7 @@ def server_info() -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def check_command_policy(command: str, platform: str | None = None) -> dict:
     """Evaluate a command against policy WITHOUT contacting any device.
 
@@ -134,7 +135,7 @@ def check_command_policy(command: str, platform: str | None = None) -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def list_devices(group: str | None = None, platform: str | None = None) -> dict:
     """List devices from the configured inventory, with source attribution.
 
@@ -162,7 +163,7 @@ def list_devices(group: str | None = None, platform: str | None = None) -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def check_device_readiness(device: str) -> dict:
     """Check whether a device could be acted on, WITHOUT contacting it.
 
@@ -205,7 +206,7 @@ def check_device_readiness(device: str) -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def run_command(device: str, command: str, timeout_s: int | None = None) -> dict:
     """Execute a read-only command on a device and return its output.
 
@@ -220,7 +221,7 @@ def run_command(device: str, command: str, timeout_s: int | None = None) -> dict
     return raw_tools.run_command(device, command, timeout_s)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def check_reachability(device: str) -> dict:
     """Probe a device, separating unreachable from auth-failed from wrong-platform.
 
@@ -230,7 +231,7 @@ def check_reachability(device: str) -> dict:
     return raw_tools.check_reachability(device)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
 def get_facts(device: str, getters: list[str] | None = None,
               timeout_s: int | None = None) -> dict:
     """Retrieve normalized operational facts in one shape across vendors.
@@ -249,7 +250,7 @@ def get_facts(device: str, getters: list[str] | None = None,
     return fact_tools.get_facts(device, getters, timeout_s)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
 def run_fleet(target: str, command: str | None = None,
               getters: list[str] | None = None,
               max_workers: int | None = None,
@@ -269,7 +270,7 @@ def run_fleet(target: str, command: str | None = None,
 if write_enabled():
     # Registered ONLY when write mode is enabled (FR-022): absent from tools/list
     # otherwise, so an agent cannot attempt a change that was never sanctioned.
-    @mcp.tool()
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False))
     def apply_config(device: str, config: str, change_request: str | None = None,
                      approved_by: str | None = None) -> dict:
         """Apply configuration, only if every gate is satisfied.
@@ -289,7 +290,7 @@ if write_enabled():
         return change_tools.apply_config(device, config, change_request, approved_by)
 
 
-    @mcp.tool()
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     def check_change_request(change_request: str) -> dict:
         """Check whether a ServiceNow change request authorises implementation."""
         return change_tools.check_change_request(change_request)

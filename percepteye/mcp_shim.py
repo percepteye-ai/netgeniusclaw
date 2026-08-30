@@ -168,10 +168,25 @@ class _Shim:
         self._preds = preds
         self._record = record
         self._pending: dict[str, tuple[str, dict[str, Any], float]] = {}
+        #: ids of in-flight ``tools/list`` calls (distinct from ``_pending``,
+        #: which is outcome capture for ``tools/call``).
+        self._listing: set[str] = set()
         self._lock = threading.Lock()
 
     # -- upstream: the host's request frames -------------------------------
     def note_request(self, frame: dict[str, Any]) -> None:
+        # ``tools/list`` is where a server states what its tools ARE, including
+        # MCP's `annotations.readOnlyHint`. That never reaches the host's
+        # conversation hook -- by the time tools are handed to a model they are
+        # in the provider's function-call shape, which has no field for it. The
+        # shim already sits on every frame in both directions, so this is the
+        # one place the declaration is observable at all.
+        if frame.get("method") == "tools/list":
+            rid = frame.get("id")
+            if rid is not None:
+                with self._lock:
+                    self._listing.add(str(rid))
+            return
         if frame.get("method") != "tools/call":
             return
         rid = frame.get("id")
@@ -193,6 +208,13 @@ class _Shim:
     def note_response(self, frame: dict[str, Any]) -> None:
         rid = frame.get("id")
         if rid is None:
+            return
+        with self._lock:
+            listing = str(rid) in self._listing
+            if listing:
+                self._listing.discard(str(rid))
+        if listing:
+            _write_tool_traits(frame)
             return
         with self._lock:
             entry = self._pending.pop(str(rid), None)
@@ -236,6 +258,55 @@ class _Shim:
         except Exception:                                   # noqa: BLE001
             # A capture bug costs the observation and nothing else.
             pass
+
+
+def _write_tool_traits(frame: dict[str, Any]) -> None:
+    """Persist declared per-tool traits from one ``tools/list`` response.
+
+    ONE FILE PER SHIM PROCESS, never a shared one. Every wrapped server runs its
+    own shim, they start concurrently, and a single merged file would be a
+    read-modify-write race between processes with no lock between them. The
+    reader globs and merges instead, which is also what lets it SEE a
+    disagreement rather than have the last writer win it.
+
+    Absence is preserved: a tool whose server declares no ``readOnlyHint`` is
+    written with no entry, not with ``false``. "The server did not say" and
+    "the server said it writes" are different facts and only one of them is
+    safe to act on.
+
+    Never raises. A trait we failed to capture costs a tool its held-out
+    eligibility; an exception here would cost the operator their MCP server.
+    """
+    try:
+        out_dir = os.environ.get("PERCEPTEYE_TRAJECTORY_DIR")
+        if not out_dir:
+            return
+        tools = ((frame.get("result") or {}).get("tools")) or []
+        if not isinstance(tools, list):
+            return
+        traits: dict[str, bool] = {}
+        for t in tools:
+            if not isinstance(t, dict):
+                continue
+            name = str(t.get("name") or "").strip()
+            if not name:
+                continue
+            ann = t.get("annotations")
+            if not isinstance(ann, dict):
+                continue
+            hint = ann.get("readOnlyHint")
+            if isinstance(hint, bool):
+                traits[name] = hint
+        if not traits:
+            return
+        os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, f"tool_traits.{os.getpid()}.json")
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(traits, fh)
+        os.replace(tmp, path)
+    except Exception:                                       # noqa: BLE001
+        pass
 
 
 def _pump(src, dst, on_frame) -> None:
