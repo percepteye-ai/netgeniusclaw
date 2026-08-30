@@ -17,6 +17,17 @@ Measured after step 3 (see specs/092-duckdb-analysis/spec.md, Verification): rea
 `COPY … TO`, `INSTALL`/`LOAD`, re-enabling `enable_external_access`, and unlocking the
 configuration **all raise**. The materialised tables remain fully queryable.
 
+One write is NOT covered by step 2/3, and this used to say it was. DuckDB spills
+intermediate results to `temp_directory`, which defaults to the RELATIVE path `.tmp`
+and is bounded by `max_temp_directory_size` — 90% of available disk by default. That
+write survives lockdown: measured on duckdb 1.5.5, a heavy query still creates
+`.tmp/duckdb_temp_storage_*` in the process's working directory AFTER
+`enable_external_access=false` and `lock_configuration=true`. Since the query surface
+is the untrusted one, that was an unbounded analyst-triggerable write into wherever
+the server was launched. `Sandbox.__init__` now points `temp_directory` at a private
+0700 directory and caps it; both must be set before the lock, which is also what makes
+them unchangeable afterwards.
+
 One thing this forced, and it is worth stating plainly: a **VIEW does not survive the
 lockdown.** Views are evaluated lazily, so a view over a CSV re-opens the file at query time
 and fails once the door is shut. Datasets must be materialised, which bounds memory by the
@@ -26,8 +37,16 @@ does not depend on me writing a perfect regex.
 
 from __future__ import annotations
 
+import atexit
+import os
 import re
+import shutil
+import tempfile
 import threading
+
+#: Ceiling on DuckDB spill-to-disk. The default is 90% of available disk, which on the
+#: post-lockdown query path is an unbounded write triggerable by an analyst's query.
+MAX_TEMP_BYTES = "1GB"
 
 # Imported lazily so the statement screen -- which is pure `re` and enforces R17's read-only
 # rule -- stays importable where duckdb is absent (CI installs nothing, spec 075 SC-013).
@@ -104,8 +123,33 @@ class Sandbox:
                 "the duckdb package is not installed; install "
                 "mcp-servers/analysis-mcp/requirements.txt")
         self.conn = duckdb.connect(":memory:")
+        # SPILL FILES ARE A FILESYSTEM WRITE, AND LOCKDOWN DOES NOT STOP THEM.
+        # DuckDB's `temp_directory` defaults to the RELATIVE path `.tmp`, and
+        # `max_temp_directory_size` defaults to 90% of available disk. Under memory
+        # pressure a query materialises `.tmp/duckdb_temp_storage_*` in the process's
+        # CURRENT WORKING DIRECTORY -- wherever the operator happened to launch the
+        # server. Measured on duckdb 1.5.5 (the pinned >=1.0,<2): this still happens
+        # AFTER `enable_external_access=false` and `lock_configuration=true`, i.e. on
+        # the post-lockdown analyst-facing query path. The module docstring above
+        # promises "every filesystem and network operation now fails"; that was true
+        # for reads and false for this write.
+        #
+        # Both settings must be applied HERE. `lock_configuration=true` is what makes
+        # the boundary irreversible, and it also makes these unsettable afterwards.
+        self._tmpdir = tempfile.mkdtemp(prefix="analysis-mcp-duckdb-")
+        os.chmod(self._tmpdir, 0o700)
+        self.conn.execute(
+            "SET temp_directory='" + self._tmpdir.replace("'", "''") + "'")
+        self.conn.execute(f"SET max_temp_directory_size='{MAX_TEMP_BYTES}'")
+        atexit.register(self._cleanup_tmpdir)
         self._locked = False
         self._lock = threading.Lock()
+
+    def _cleanup_tmpdir(self) -> None:
+        """Remove the private spill directory. Safe to call more than once."""
+        d = getattr(self, "_tmpdir", None)
+        if d:
+            shutil.rmtree(d, ignore_errors=True)
 
     def load_sql(self, sql: str) -> None:
         """Materialise a dataset. Only callable BEFORE lockdown, by construction."""

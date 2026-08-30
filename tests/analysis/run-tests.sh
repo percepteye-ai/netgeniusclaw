@@ -263,6 +263,40 @@ else
 fi
 
 echo
+echo "=== Spill-to-disk is a write, and lockdown does not stop it ==="
+
+# DuckDB's temp_directory defaults to the RELATIVE path `.tmp` and max_temp_directory_size
+# to 90% of available disk. Measured on duckdb 1.5.5: a heavy query still writes
+# .tmp/duckdb_temp_storage_* into the process CWD AFTER enable_external_access=false and
+# lock_configuration=true -- i.e. on the post-lockdown, analyst-facing query path. Both
+# settings have to be applied in __init__, because lock_configuration=true is exactly what
+# makes them unsettable later.
+
+if [ "$HAVE_DUCKDB" = "1" ]; then
+    py "spill goes to a private directory, never the working directory" '
+import os, tempfile, sandbox
+os.chdir(tempfile.mkdtemp())
+sb = sandbox.Sandbox()
+sb.conn.execute("SET memory_limit=" + chr(39) + "60MB" + chr(39))
+sb.lock()
+sb.conn.execute("CREATE TEMP TABLE t AS SELECT i, repeat(" + chr(39) + "y" + chr(39) + ",200) p FROM range(400000) t(i)")
+in_cwd = os.path.isdir(".tmp")
+spilled = os.path.isdir(sb._tmpdir) and bool(os.listdir(sb._tmpdir))
+sb._cleanup_tmpdir()
+print("PASS" if (not in_cwd and spilled) else f"cwd_tmp={in_cwd} private_spill={spilled}")'
+
+    py "the spill ceiling is bounded, not 90% of the disk" '
+import sandbox
+sb = sandbox.Sandbox()
+v = sb.conn.execute("SELECT current_setting(" + chr(39) + "max_temp_directory_size" + chr(39) + ")").fetchone()[0]
+sb._cleanup_tmpdir()
+print("PASS" if "%" not in str(v) else f"unbounded: {v}")'
+else
+    skip "spill goes to a private directory, never the working directory (duckdb not installed)"
+    skip "the spill ceiling is bounded, not 90% of the disk (duckdb not installed)"
+fi
+
+echo
 echo "=== Summary ==="
 printf '  passed: %d\n  failed: %d\n  skipped: %d\n' "$PASS" "$FAIL" "$SKIP"
 [ "$FAIL" -eq 0 ] || exit 1
