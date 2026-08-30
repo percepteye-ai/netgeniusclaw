@@ -34,8 +34,14 @@ def main() -> int:
             out = {"jsonrpc": "2.0", "id": rid,
                    "result": {"protocolVersion": "2026-03-26", "capabilities": {}}}
         elif method == "tools/list":
-            out = {"jsonrpc": "2.0", "id": rid,
-                   "result": {"tools": [{"name": n} for n in BEHAVIOURS]}}
+            # Two tools declare MCP's readOnlyHint and the rest declare
+            # nothing, so a consumer can be tested on all three states:
+            # declared-read, declared-write, and undeclared.
+            _ann = {"tool_ok": True, "tool_error": False}
+            out = {"jsonrpc": "2.0", "id": rid, "result": {"tools": [
+                ({"name": n, "annotations": {"readOnlyHint": _ann[n]}}
+                 if n in _ann else {"name": n})
+                for n in BEHAVIOURS]}}
         elif method == "tools/call":
             name = (req.get("params") or {}).get("name")
             if name == "tool_jsonrpc_error":

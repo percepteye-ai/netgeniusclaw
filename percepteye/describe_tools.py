@@ -60,6 +60,21 @@ _INITIALIZED = {"jsonrpc": "2.0", "method": "notifications/initialized"}
 _LIST = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
 
+def _read_only_of(tool: dict) -> dict:
+    """``{"read_only": bool}`` when the server declared it, else ``{}``.
+
+    Only a real bool counts. A server that omits ``annotations``, sends a null
+    hint, or sends something that is not a boolean has not declared anything,
+    and inventing False on its behalf would mark a read as a write for every
+    consumer downstream.
+    """
+    ann = tool.get("annotations")
+    if not isinstance(ann, dict):
+        return {}
+    hint = ann.get("readOnlyHint")
+    return {"read_only": hint} if isinstance(hint, bool) else {}
+
+
 def _ask_server(name: str, entry: dict, *, timeout_s: float) -> list[dict]:
     """Ask one MCP server for its tools. Never raises; an error is an absence."""
     if not isinstance(entry, dict) or "command" not in entry:
@@ -146,6 +161,14 @@ def _ask_server(name: str, entry: dict, *, timeout_s: float) -> list[dict]:
                 "input_schema": t.get("inputSchema") or t.get("input_schema")
                                 or {"type": "object", "properties": {}},
                 "original_format": "openclaw_mcp",
+                # MCP's own read/write declaration, normalised to the
+                # protocol-neutral `read_only` the discovery protocol carries.
+                # OMITTED when the server declares nothing: absence means "the
+                # server did not say", which downstream is treated as a possible
+                # write and keeps the tool out of the held-out yardstick. A
+                # default of False here would be us asserting something about
+                # somebody's tool that nobody checked.
+                **_read_only_of(t),
             }
             for t in tools
             if isinstance(t, dict) and t.get("name")
