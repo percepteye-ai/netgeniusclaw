@@ -383,6 +383,23 @@ def _is_loopback(url: str) -> bool:
     return any(h in url for h in ("127.0.0.1", "localhost", "[::1]", "host.docker.internal"))
 
 
+def _resolve_plugin_path() -> str | None:
+    """Where the flywheel OpenClaw plugin lives, per the installed SDK.
+
+    Returns None when the SDK is absent or cannot find it; `project()` records
+    that in its report rather than failing, because a config with no plugin is
+    still a usable config -- it just cannot describe the agent.
+    """
+    try:
+        from percepteye_agent_flywheel.host_description import openclaw_plugin_path
+    except ImportError:
+        return None
+    try:
+        return openclaw_plugin_path()
+    except Exception:                                        # noqa: BLE001
+        return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -404,6 +421,11 @@ def main() -> int:
     ap.add_argument("--predicates", default=None,
                     help="JSON file of per-tool verdict predicates. Absent, every "
                          "transport-clean result is recorded `unknown`.")
+    ap.add_argument("--plugin-path", default=None,
+                    help="the flywheel OpenClaw plugin directory. Resolved from "
+                         "the installed SDK when omitted; without it the host "
+                         "refuses the conversation hook and the agent is never "
+                         "described.")
     ap.add_argument("-o", "--out", required=True)
     a = ap.parse_args()
 
@@ -422,6 +444,14 @@ def main() -> int:
         cfg, provider=a.provider_id or a.server, base_url=base_url, key=key,
         model=a.model, ctx=a.context_window, max_tokens=a.max_tokens,
         keep_tools=None if a.tools == "all" else TRIAGE_TOOLS,
+        # RESOLVED, not defaulted. `project()` has always accepted this and
+        # `main()` never passed it, so every config this CLI produced had
+        # `plugins.entries` empty -- and the comment at the top of project()
+        # says exactly what that costs: the plugin loads, tool-outcome capture
+        # works, and the agent is NEVER DESCRIBED, which looks identical to a
+        # healthy install. That is precisely how a describe pass just failed:
+        # "the agent ran but its host wrote no description".
+        plugin_path=a.plugin_path or _resolve_plugin_path(),
         shim_python=a.shim_python, shim_path=a.shim_path,
         predicates=os.path.abspath(os.path.expanduser(a.predicates))
         if a.predicates else None,
