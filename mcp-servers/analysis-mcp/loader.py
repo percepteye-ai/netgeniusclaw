@@ -140,12 +140,38 @@ def discover() -> tuple[list[dict], list[str]]:
     return found, notes
 
 
-def load_statement(ds: dict) -> str:
+def safe_column(name: str) -> str:
+    """A column name reduced to characters that cannot end a SQL identifier.
+
+    Alphanumerics and underscore only. This is the ONLY sanitiser for a name that
+    came out of a file, and it runs before the name reaches any statement.
+    """
+    return "".join(c if (c.isalnum() or c == "_") else "_" for c in str(name))
+
+
+def load_statement(ds: dict, names: list[str] | None = None) -> str:
     """The CREATE TABLE that materialises one dataset.
 
     A TABLE, never a VIEW: a view is lazily evaluated and would break the moment the sandbox
     locks the filesystem. Zeek logs are TSV with `#`-prefixed header blocks, so they need
     explicit options rather than sniffing.
+
+    ``names`` applies the column names AT LOAD TIME. It used to be done afterwards with
+    ``ALTER TABLE ... RENAME COLUMN "<detected>" TO "<safe>"``, where the REPLACEMENT was
+    sanitised and the DETECTED name was interpolated raw. A file whose first line is
+    ``#fields\ta"b`` loads as a column literally named ``a"b``, and the statement built
+    from it was::
+
+        ALTER TABLE "evil" RENAME COLUMN "a"b" TO "ts"
+
+    -- the identifier quoting closes early. That statement went through ``Sandbox.load_sql``,
+    which has no screen (the screen guards ``query`` only), and ran BEFORE ``sb.lock()``,
+    i.e. while ``enable_external_access`` was still true and ``lock_configuration`` false.
+    The documented boundary was established after the injectable statement had already run.
+
+    Passing names here removes the statement rather than escaping it: every name goes
+    through :func:`safe_column`, and they are emitted as quoted STRING LITERALS (a data
+    position, not an identifier position) with ``'`` doubled.
     """
     path = ds["path"].replace("'", "''")
     if ds["reader"] == "read_csv":
@@ -153,6 +179,10 @@ def load_statement(ds: dict) -> str:
         opts = ("delim='\\t', header=false, comment='#', ignore_errors=true, "
                 "all_varchar=true" if is_zeek else
                 "ignore_errors=true, all_varchar=true")
+        if names:
+            cols = ", ".join(
+                "'" + safe_column(n).replace("'", "''") + "'" for n in names)
+            opts += f", names=[{cols}]"
         src = f"read_csv('{path}', {opts})"
     elif ds["reader"] == "read_json":
         src = f"read_json('{path}', ignore_errors=true, format='auto')"
@@ -169,6 +199,15 @@ def zeek_column_names(path: str) -> list[str] | None:
     practically useless -- an analyst cannot guess that column2 is `id.orig_h`. Returns None
     for a file with no Zeek header.
     """
+    # ONLY for files loaded with the Zeek options. `load_statement` sets
+    # header=false/comment='#' when the path ends in `.log`, and lets DuckDB sniff
+    # otherwise -- so for a non-Zeek file the first line is ALREADY consumed as the
+    # header. Reading `#fields` from such a file made its own first line serve as both
+    # the detected column names AND the replacement names, which is the mismatch the
+    # injection above rode in on. A `#fields` header is a Zeek artifact; treat it as
+    # one.
+    if not str(path).endswith(".log"):
+        return None
     try:
         with open(path, encoding="utf-8", errors="replace") as fh:
             for line in fh:

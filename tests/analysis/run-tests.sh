@@ -206,6 +206,63 @@ hit = [f for f in found if f["path"].endswith("empty.csv")]
 print("PASS" if not hit and any("empty" in n for n in notes) else f"found={hit}")'
 
 echo
+echo "=== Column naming: no statement is built from a name that came out of a file ==="
+
+# The defect: `_ensure()` applied Zeek column names with
+#   ALTER TABLE "<t>" RENAME COLUMN "<detected>" TO "<safe>"
+# where the REPLACEMENT was sanitised and the DETECTED name -- which DuckDB reads out
+# of the file -- was interpolated raw into an identifier position. A first line of
+#   #fields<TAB>a"b
+# loads as a column literally named a"b, giving
+#   ALTER TABLE "evil" RENAME COLUMN "a"b" TO "ts"
+# whose quoting closes early. That statement ran through Sandbox.load_sql (no screen --
+# the screen guards `query` only) and BEFORE sb.lock(), i.e. while enable_external_access
+# was still true. The fix removes the statement: names are applied at load time via
+# read_csv(names=[...]), a data position, each one sanitised first.
+
+py "a #fields header is only honoured for .log (the non-.log path is closed)" '
+import loader, os, tempfile
+d = tempfile.mkdtemp()
+p = os.path.join(d, "evil.csv")
+open(p, "w", newline="").write("#fields\ta\"b\n1\tx\n")
+print("PASS" if loader.zeek_column_names(p) is None else "header read from a non-.log file")'
+
+py "no ALTER/RENAME is ever emitted for a dataset" '
+import loader, os, tempfile
+d = tempfile.mkdtemp()
+p = os.path.join(d, "conn.log")
+open(p, "w").write("#fields\tts\tid.orig_h\n1\t10.0.0.1\n")
+st = loader.load_statement({"path": p, "table": "conn", "reader": "read_csv"},
+                           loader.zeek_column_names(p))
+print("PASS" if ("ALTER" not in st.upper() and "RENAME" not in st.upper()) else st)'
+
+py "a hostile column name inside a real .log is sanitised, not quoted-and-passed" '
+import loader, os, tempfile
+d = tempfile.mkdtemp()
+p = os.path.join(d, "bad.log")
+open(p, "w").write("#fields\tts\ta\"b; DROP TABLE x; --\n1\tv\n")
+st = loader.load_statement({"path": p, "table": "bad", "reader": "read_csv"},
+                           loader.zeek_column_names(p))
+bad = any(c in st.split("names=[")[1].split("]")[0] for c in (chr(34), ";"))
+print("PASS" if not bad else st)'
+
+if [ "$HAVE_DUCKDB" = "1" ]; then
+    py "a real Zeek .log still gets its real column names" '
+import loader, duckdb, os, tempfile
+d = tempfile.mkdtemp()
+p = os.path.join(d, "conn.log")
+open(p, "w").write("#separator \\x09\n#fields\tts\tid.orig_h\n1\t10.0.0.1\n2\t10.0.0.2\n")
+st = loader.load_statement({"path": p, "table": "conn", "reader": "read_csv"},
+                           loader.zeek_column_names(p))
+c = duckdb.connect(":memory:"); c.execute(st)
+cols = [x[0] for x in c.execute(chr(39)*0 + "SELECT * FROM \"conn\" LIMIT 0").description]
+n = c.execute("SELECT count(*) FROM \"conn\"").fetchone()[0]
+print("PASS" if cols == ["ts", "id_orig_h"] and n == 2 else f"{cols} rows={n}")'
+else
+    skip "a real Zeek .log still gets its real column names (duckdb not installed)"
+fi
+
+echo
 echo "=== Summary ==="
 printf '  passed: %d\n  failed: %d\n  skipped: %d\n' "$PASS" "$FAIL" "$SKIP"
 [ "$FAIL" -eq 0 ] || exit 1

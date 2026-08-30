@@ -67,17 +67,19 @@ def _ensure() -> Sandbox:
     loaded: list[dict] = []
     for ds in datasets:
         try:
-            sb.load_sql(loader.load_statement(ds))
-            entry = dict(ds)
             # Zeek logs carry their real column names in a `#fields` header. Without applying
             # them the table is columnN and an analyst cannot guess that column2 is id.orig_h.
+            #
+            # Applied AT LOAD TIME. This was previously a follow-up
+            # `ALTER TABLE ... RENAME COLUMN "<detected>" TO "<safe>"` in which the
+            # replacement was sanitised and the DETECTED name -- which comes out of the
+            # file -- was interpolated raw into an identifier position. See
+            # `loader.load_statement` for the proven break-out. There is no longer a
+            # statement built from a detected name at all.
             names = loader.zeek_column_names(ds["path"])
+            sb.load_sql(loader.load_statement(ds, names))
+            entry = dict(ds)
             if names:
-                cur = sb.conn.execute(f'SELECT * FROM "{ds["table"]}" LIMIT 0')
-                have = [d[0] for d in (cur.description or [])]
-                for old, new in zip(have, names):
-                    safe = "".join(c if (c.isalnum() or c == "_") else "_" for c in new)
-                    sb.load_sql(f'ALTER TABLE "{ds["table"]}" RENAME COLUMN "{old}" TO "{safe}"')
                 entry["columns_from_zeek_header"] = True
             rows = sb.conn.execute(f'SELECT count(*) FROM "{ds["table"]}"').fetchone()[0]
             entry["rows"] = rows
